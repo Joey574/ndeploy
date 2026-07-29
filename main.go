@@ -3,12 +3,12 @@ package main
 import (
 	"fmt"
 	"log"
-	"nixos-deploy/v2/internal/cli"
-	"nixos-deploy/v2/internal/identify"
-	"nixos-deploy/v2/internal/remote"
+	"ndeploy/v2/internal/cli"
+	"ndeploy/v2/internal/dbu"
 	"os"
 
 	"github.com/jessevdk/go-flags"
+	_ "modernc.org/sqlite"
 )
 
 func main() {
@@ -22,17 +22,21 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	remotes := make([]*remote.Remote, len(args.Remote))
-	for i := range args.Remote {
-		remotes[i] = remote.NewRemote(args.Remote[i])
+	if err = run(args); err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func run(args *cli.Args) error {
+	fmt.Println("starting ndeploy...")
+
+	workDir, err := os.UserConfigDir()
+	if err != nil {
+		log.Fatalln(err)
 	}
 
-	for _, r := range remotes {
-		deps, err := identify.FindDependencies(r.ConfigPath)
-		if err != nil {
-			log.Fatalln(err)
-		}
+	fmt.Println("workdir:", workDir)
 
-		fmt.Println(deps)
-	}
+	fmt.Println(dbu.DatabaseExists(workDir))
+	return nil
 }
