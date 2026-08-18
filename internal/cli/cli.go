@@ -5,6 +5,7 @@ import (
 )
 
 type Args struct {
+	WorkDir string `long:"workDir" description:"sets the work directory, defaults to user config directory"`
 }
 
 func NewArgs() *Args {

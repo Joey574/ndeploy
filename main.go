@@ -1,10 +1,9 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"ndeploy/v2/internal/cli"
 	"ndeploy/v2/internal/dbu"
+	"ndeploy/v2/internal/sink"
 	"os"
 
 	"github.com/jessevdk/go-flags"
@@ -12,31 +11,53 @@ import (
 )
 
 func main() {
+	sink.SetFormat("[\\d] [\\t] *")
+	sink.SetLogLevel(sink.TRACE) // TODO : let user define this
+	sink.PushSinks(os.Stdout)
+
 	args := cli.NewArgs()
 	_, err := args.Parse()
 	if err != nil {
 		if flags.WroteHelp(err) {
-			os.Exit(0)
+			return
 		}
 
-		log.Fatalln(err)
+		sink.Fatalln(err)
 	}
 
 	if err = run(args); err != nil {
-		log.Fatalln(err)
+		sink.Fatalln(err)
 	}
 }
 
 func run(args *cli.Args) error {
-	fmt.Println("starting ndeploy...")
+	sink.Println(sink.INFO, "starting ndeploy")
 
-	workDir, err := os.UserConfigDir()
-	if err != nil {
-		log.Fatalln(err)
+	var err error
+	var workDir string
+
+	if args.WorkDir != "" {
+		workDir = args.WorkDir
+	} else {
+		workDir, err = os.UserConfigDir()
+		if err != nil {
+			return err
+		}
+		workDir += "/ndeploy"
 	}
 
-	fmt.Println("workdir:", workDir)
+	if err := os.MkdirAll(workDir, 0o750); err != nil {
+		return err
+	}
 
-	fmt.Println(dbu.DatabaseExists(workDir))
+	sink.Printf(sink.DEBUG, "work directory: %s\n", workDir)
+
+	if !dbu.DatabaseExists(workDir) {
+		sink.Println(sink.TRACE, "creating database")
+		if err := dbu.InitDb(workDir); err != nil {
+			sink.Fatalln(err)
+		}
+	}
+
 	return nil
 }
