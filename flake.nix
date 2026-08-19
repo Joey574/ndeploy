@@ -1,3 +1,5 @@
+{ pkgs, ... }:
+
 {
   checks.x86_64-linux.fleet-test = pkgs.testers.runNixOSTest {
     name = "ndeploy-test";
