@@ -1,0 +1,8 @@
+[Migrations]
+fyneDo = true
+
+[Details]
+Name = "ndeploy"
+Id = "ndeploy"
+Version = "0.0.1"
+Build = 1

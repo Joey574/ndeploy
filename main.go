@@ -1,8 +1,8 @@
 package main
 
 import (
+	"ndeploy/v2/internal/app"
 	"ndeploy/v2/internal/cli"
-	"ndeploy/v2/internal/dbu"
 	"ndeploy/v2/internal/sink"
 	"os"
 
@@ -11,9 +11,9 @@ import (
 )
 
 func main() {
-	sink.SetFormat("[\\d] [\\t] *")
-	sink.SetLogLevel(sink.TRACE) // TODO : let user define this
+	sink.SetFormat(`[\d] [\t] *`)
 	sink.PushSinks(os.Stdout)
+	sink.SetLogLevel(sink.TRACE) // TODO : let user define this
 
 	args := cli.NewArgs()
 	_, err := args.Parse()
@@ -25,39 +25,8 @@ func main() {
 		sink.Fatalln(err)
 	}
 
-	if err = run(args); err != nil {
+	a := app.NewApp()
+	if err := a.Run(args); err != nil {
 		sink.Fatalln(err)
 	}
-}
-
-func run(args *cli.Args) error {
-	sink.Println(sink.INFO, "starting ndeploy")
-
-	var err error
-	var workDir string
-
-	if args.WorkDir != "" {
-		workDir = args.WorkDir
-	} else {
-		workDir, err = os.UserConfigDir()
-		if err != nil {
-			return err
-		}
-		workDir += "/ndeploy"
-	}
-
-	if err := os.MkdirAll(workDir, 0o750); err != nil {
-		return err
-	}
-
-	sink.Printf(sink.DEBUG, "work directory: %s\n", workDir)
-
-	if !dbu.DatabaseExists(workDir) {
-		sink.Println(sink.TRACE, "creating database")
-		if err := dbu.InitDb(workDir); err != nil {
-			sink.Fatalln(err)
-		}
-	}
-
-	return nil
 }
