@@ -32,7 +32,7 @@ func (a *App) Run(args *cli.Args) error {
 		return err
 	}
 
-	app := app.New()
+	app := app.NewWithID("ndeploy")
 	w := app.NewWindow("hello")
 
 	message := widget.NewLabel("welcome")
