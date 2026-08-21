@@ -13,6 +13,10 @@
   programs.ssh.startAgent = true;
   programs.ssh.askPassword = "${pkgs.x11_ssh_askpass}/libexec/x11-ssh-askpass";
 
+  programs.ssh.extraConfig = ''
+    AddKeysToAgent yes
+  '';
+
   systemd.tmpfiles.rules = [
     "d /home/controller/.cache 0755 controller users -"
     "d /home/controller/.config 0755 controller users -"
