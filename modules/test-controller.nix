@@ -13,15 +13,12 @@
   programs.ssh.startAgent = true;
   programs.ssh.askPassword = "${pkgs.x11_ssh_askpass}/libexec/x11-ssh-askpass";
 
-  environment.etc."ssh/test_key" = {
-    source = ../keys/test_key;
-    mode = "0600";
-    user = "controller";
-  };
-
   systemd.tmpfiles.rules = [
     "d /home/controller/.cache 0755 controller users -"
     "d /home/controller/.config 0755 controller users -"
+    "d /home/controller/.ssh 0700 controller users -"
+
+    "C /home/controller/.ssh/id_ed25519 0600 controller users - ${../keys/test_key}"
   ];
 
   services.xserver.displayManager.lightdm.enable = true;
