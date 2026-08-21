@@ -12,7 +12,7 @@
 
   environment.etc."ssh/test_key" = {
     source = ../keys/test_key;
-    mode = 0600;
+    mode = "0600";
   };
 
   systemd.tmpfiles.rules = [
