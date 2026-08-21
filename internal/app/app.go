@@ -1,6 +1,7 @@
 package app
 
 import (
+	"embed"
 	"ndeploy/v2/internal/cli"
 	"ndeploy/v2/internal/dbu"
 	"ndeploy/v2/internal/sink"
@@ -20,7 +21,7 @@ func NewApp() *App {
 	return &App{}
 }
 
-func (a *App) Run(args *cli.Args) error {
+func (a *App) Run(args *cli.Args, schema embed.FS) error {
 	var err error
 
 	a.workDir, err = a.setupWorkDir(args)
@@ -28,7 +29,7 @@ func (a *App) Run(args *cli.Args) error {
 		return err
 	}
 
-	if err := dbu.CreateIfNotExists(a.workDir); err != nil {
+	if err := dbu.CreateIfNotExists(a.workDir, schema); err != nil {
 		return err
 	}
 

@@ -2,11 +2,14 @@ package dbu
 
 import (
 	"database/sql"
+	"embed"
 	"fmt"
+	"io/fs"
 	"ndeploy/v2/internal/database"
 	"ndeploy/v2/internal/sink"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const (
@@ -41,9 +44,9 @@ func DatabaseExists(dir string) bool {
 	return true
 }
 
-func CreateIfNotExists(dir string) error {
+func CreateIfNotExists(dir string, schema embed.FS) error {
 	if !DatabaseExists(dir) {
-		if err := Init(dir); err != nil {
+		if err := Create(dir, schema); err != nil {
 			return err
 		}
 	} else {
@@ -63,7 +66,7 @@ func ConnectTo(dir string) (*database.Queries, error) {
 	return database.New(db), nil
 }
 
-func Init(dir string) error {
+func Create(dir string, schema embed.FS) error {
 	sink.Println(sink.TRACE, "creating database")
 	db, err := sql.Open("sqlite", fmt.Sprintf("file:%s?mode=rwc", path(dir)))
 	if err != nil {
@@ -71,6 +74,29 @@ func Init(dir string) error {
 	}
 	defer db.Close()
 
-	_, err = db.Exec(schema)
+	err = fs.WalkDir(schema, "sql/schema", func(path string, d fs.DirEntry, err error) error {
+		if d.IsDir() {
+			return nil
+		}
+
+		if !strings.HasSuffix(d.Name(), ".sql") {
+			return nil
+		}
+
+		bytes, err := fs.ReadFile(schema, fmt.Sprintf("sql/schema/%s", d.Name()))
+		if err != nil {
+			sink.Printf(sink.ERROR, "%v\n", err)
+			return err
+		}
+
+		_, err = db.Exec(string(bytes))
+		if err != nil {
+			sink.Printf(sink.ERROR, "%v\n", err)
+			return err
+		}
+
+		return nil
+	})
+
 	return err
 }
