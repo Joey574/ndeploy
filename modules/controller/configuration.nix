@@ -3,6 +3,7 @@
 {
   imports = [
     ./ssh.nix
+    ./i3.nix
   ];
 
   services.xserver.enable = true;
@@ -24,14 +25,6 @@
     enable = true;
     user = "controller";
   };
-  services.displayManager.defaultSession = "none+i3";
-
-  services.xserver.windowManager.i3.configFile = pkgs.writeText "i3-config" ''
-    set $mod Mod4
-    bindsym $mod+f floating toggle
-    bindsym $mod+Shift+q kill
-    bindsym $mod+Return exec i3-sensible-terminal
-  '';
 
   virtualisation = {
     graphics = true;
@@ -50,6 +43,6 @@
     };
   };
 
-  environment.systemPackages = with pkgs; [ mesa i3status dmenu ndeploy ];
+  environment.systemPackages = with pkgs; [ mesa ndeploy ];
   system.stateVersion = "26.05";
 }
