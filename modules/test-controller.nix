@@ -11,6 +11,7 @@
   };
 
   programs.ssh.startAgent = true;
+  programs.ssh.askPassword = "${pkgs.x11_ssh_askpass}/libexec/x11-ssh-askpass";
 
   environment.etc."ssh/test_key" = {
     source = ../keys/test_key;
