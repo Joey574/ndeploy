@@ -44,13 +44,13 @@
 
         nodes = {
           controller = {pkgs, ... }: {
-            imports = [ ./modules/test-controller.nix ];
+            imports = [ ./modules/controller/configuration.nix ];
             environment.systemPackages = [ self.packages.${system}.ndeploy ];
             _module.args.ndeploy = self.packages.${system}.ndeploy;
           };
 
-          node1 = { ... }: { imports = [ ./modules/test-node.nix ]; };
-          node2 = { ... }: { imports = [ ./modules/test-node.nix ]; };
+          node1 = { ... }: { imports = [ ./modules/nodet1/configuration.nix ]; };
+          node2 = { ... }: { imports = [ ./modules/nodet1/configuration.nix ]; };
         };
 
         testScript = ''

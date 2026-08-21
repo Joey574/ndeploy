@@ -1,6 +1,10 @@
 { pkgs, ndeploy, ... }:
 
 {
+  imports = [
+    ./ssh.nix
+  ];
+
   services.xserver.enable = true;
   services.xserver.windowManager.i3.enable = true;
 
@@ -10,19 +14,9 @@
     extraGroups = [ "video" "input" "wheel" ];
   };
 
-  programs.ssh.startAgent = true;
-  programs.ssh.askPassword = "${pkgs.x11_ssh_askpass}/libexec/x11-ssh-askpass";
-
-  programs.ssh.extraConfig = ''
-    AddKeysToAgent yes
-  '';
-
   systemd.tmpfiles.rules = [
     "d /home/controller/.cache 0755 controller users -"
     "d /home/controller/.config 0755 controller users -"
-    "d /home/controller/.ssh 0700 controller users -"
-
-    "C /home/controller/.ssh/id_ed25519 0600 controller users - ${../keys/test_key}"
   ];
 
   services.xserver.displayManager.lightdm.enable = true;
@@ -57,6 +51,6 @@
     };
   };
 
-  environment.systemPackages = with pkgs; [ mesa i3status dmenu openssh ];
+  environment.systemPackages = with pkgs; [ mesa i3status dmenu ];
   system.stateVersion = "26.05";
 }
