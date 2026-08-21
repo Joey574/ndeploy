@@ -3,6 +3,21 @@
 {
   services.openssh = {
     enable = true;
+
+    settings = {
+      PasswordAuthentication = false;
+      KbdInteractiveAuthentication = false;
+      PermitRootLogin = "no";
+      AllowUsers = [
+        "admin@*"
+      ];
+    };
+  };
+
+  services.fail2ban = {
+    enable = true;
+    maxretry = 5;
+    bantime = "30s";
   };
 
   nix.settings.trusted-users = [ "root" "admin" ];
