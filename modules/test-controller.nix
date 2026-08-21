@@ -10,7 +10,7 @@
     extraGroups = [ "video" "input" "wheel" ];
   };
 
-  environment.etc."ssh.test_key" = {
+  environment.etc."ssh/test_key" = {
     source = ../keys/test_key;
     mode = 0600;
   };
