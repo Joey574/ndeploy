@@ -27,7 +27,6 @@
   services.displayManager.defaultSession = "none+i3";
 
   services.xserver.windowManager.i3.configFile = pkgs.writeText "i3-config" ''
-    exec ${ndeploy}/bin/ndeploy
     set $mod Mod4
     bindsym $mod+f floating toggle
     bindsym $mod+Shift+q kill
@@ -51,6 +50,6 @@
     };
   };
 
-  environment.systemPackages = with pkgs; [ mesa i3status dmenu ];
+  environment.systemPackages = with pkgs; [ mesa i3status dmenu ndeploy ];
   system.stateVersion = "26.05";
 }
