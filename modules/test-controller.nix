@@ -10,9 +10,12 @@
     extraGroups = [ "video" "input" "wheel" ];
   };
 
+  programs.ssh.startAgent = true;
+
   environment.etc."ssh/test_key" = {
     source = ../keys/test_key;
     mode = "0600";
+    user = "controller";
   };
 
   systemd.tmpfiles.rules = [
