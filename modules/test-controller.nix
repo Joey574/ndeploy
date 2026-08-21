@@ -10,6 +10,11 @@
     extraGroups = [ "video" "input" "wheel" ];
   };
 
+  environment.etc."ssh.test_key" = {
+    source = ../keys/test_key;
+    mode = 0600;
+  };
+
   systemd.tmpfiles.rules = [
     "d /home/controller/.cache 0755 controller users -"
     "d /home/controller/.config 0755 controller users -"
@@ -47,6 +52,6 @@
     };
   };
 
-  environment.systemPackages = with pkgs; [ mesa i3status dmenu ];
+  environment.systemPackages = with pkgs; [ mesa i3status dmenu openssh ];
   system.stateVersion = "26.05";
 }
