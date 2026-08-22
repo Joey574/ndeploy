@@ -2,7 +2,6 @@ package main
 
 import (
 	"embed"
-	"fmt"
 	"ndeploy/v2/internal/app"
 	"ndeploy/v2/internal/cli"
 	"ndeploy/v2/internal/sink"
@@ -18,7 +17,10 @@ var schema embed.FS
 func main() {
 	sink.SetFormat(`[\d] [\t] *`)
 	sink.SetLogLevel(sink.TRACE) // TODO : let user define this
-	sink.PushSinks(os.Stdout)
+
+	// 8MB ring buffer
+	rb := sink.NewRingBuffer(8 * 1024 * 1024)
+	sink.PushSinks(os.Stdout, rb)
 
 	args := cli.NewArgs()
 	_, err := args.Parse()
@@ -29,18 +31,6 @@ func main() {
 
 		sink.Fatalln(err)
 	}
-
-	// ring buf test
-	rb := sink.NewRingBuffer(8)
-
-	rb.Write([]byte("hello world!"))
-	bytes, err := rb.ReadAll()
-	fmt.Println(string(bytes))
-
-	fmt.Println("DEBUG")
-	rb.DebugDump()
-
-	os.Exit(0)
 
 	a := app.NewApp()
 	if err := a.Run(args, schema); err != nil {
