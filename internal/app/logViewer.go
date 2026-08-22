@@ -10,8 +10,10 @@ import (
 )
 
 type LogViewer struct {
-	rb         *sink.RingBuffer
-	lastVer    uint64
+	rb      *sink.RingBuffer
+	lastVer uint64
+	buf     []byte
+
 	richText   *widget.RichText
 	scroll     *container.Scroll
 	autoScroll bool
@@ -25,7 +27,9 @@ func NewLogViewer(rb *sink.RingBuffer) *LogViewer {
 	sc := container.NewScroll(rt)
 
 	return &LogViewer{
-		rb:         rb,
+		rb:  rb,
+		buf: make([]byte, rb.Capacity()),
+
 		richText:   rt,
 		scroll:     sc,
 		autoScroll: true,
@@ -51,13 +55,13 @@ func (lv *LogViewer) Run(interval time.Duration) {
 				continue
 			}
 
-			data, err := lv.rb.ReadAll()
+			n, err := lv.rb.Read(lv.buf)
 			if err != nil {
 				return
 			}
 
 			lv.lastVer = v
-			text := string(data)
+			text := string(lv.buf[:n])
 			fyne.Do(func() {
 				lv.richText.Segments = []widget.RichTextSegment{
 					&widget.TextSegment{Text: text, Style: widget.RichTextStyleInline},

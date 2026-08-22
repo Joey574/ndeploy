@@ -49,6 +49,12 @@ func (r *RingBuffer) Version() uint64 {
 	return r.version
 }
 
+func (r *RingBuffer) Capacity() int {
+	r.mx.RLock()
+	defer r.mx.RUnlock()
+	return r.capacity
+}
+
 func (r *RingBuffer) Write(p []byte) (int, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
