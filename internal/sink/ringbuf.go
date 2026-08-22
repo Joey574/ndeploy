@@ -49,7 +49,7 @@ func (r *RingBuffer) Write(p []byte) (int, error) {
 	}
 
 	if len(p) >= r.capacity {
-		return r.truncateCopy(p)
+		return r.truncateCopyLocked(p)
 	}
 
 	if overflow := r.size + len(p) - r.capacity; overflow > 0 {
@@ -58,10 +58,10 @@ func (r *RingBuffer) Write(p []byte) (int, error) {
 
 	r.size = min(r.size+len(p), r.capacity)
 	if r.end+len(p) <= r.capacity {
-		return r.copy(p)
+		return r.copyLocked(p)
 	}
 
-	return r.overflowCopy(p)
+	return r.overflowCopyLocked(p)
 }
 
 // Reads data from buffer without advancing the start of it
@@ -72,7 +72,7 @@ func (r *RingBuffer) Read(p []byte) (int, error) {
 		return 0, fmt.Errorf("buffer is closed")
 	}
 
-	return r.readBuffer(p)
+	return r.readBufferLocked(p)
 }
 
 func (r *RingBuffer) ReadAll() ([]byte, error) {
@@ -84,7 +84,7 @@ func (r *RingBuffer) ReadAll() ([]byte, error) {
 	}
 
 	buf := make([]byte, r.size)
-	_, err := r.readBuffer(buf)
+	_, err := r.readBufferLocked(buf)
 	return buf, err
 }
 
@@ -117,7 +117,7 @@ func (r *RingBuffer) Consume(p []byte) (int, error) {
 		return 0, fmt.Errorf("buffer is closed")
 	}
 
-	n, err := r.readBuffer(p)
+	n, err := r.readBufferLocked(p)
 	if err == nil {
 		r.start = (r.start + n) % r.capacity
 		r.size -= n
@@ -125,9 +125,8 @@ func (r *RingBuffer) Consume(p []byte) (int, error) {
 	return n, err
 }
 
-// Lock must already be set before this is called
 // Handles copy for data which is larger than the buffer, requiring truncation
-func (r *RingBuffer) truncateCopy(p []byte) (int, error) {
+func (r *RingBuffer) truncateCopyLocked(p []byte) (int, error) {
 	idx := len(p) - len(r.buf)
 	copy(r.buf, p[idx:])
 	r.start = 0
@@ -138,15 +137,14 @@ func (r *RingBuffer) truncateCopy(p []byte) (int, error) {
 
 // Lock must already be set before this is called
 // Handles copies for when data fits into the buffer, without an overflow
-func (r *RingBuffer) copy(p []byte) (int, error) {
+func (r *RingBuffer) copyLocked(p []byte) (int, error) {
 	copy(r.buf[r.end:], p)
 	r.end = (r.end + len(p)) % r.capacity
 	return len(p), nil
 }
 
-// Lock must already be set before this is called
 // Handles copy for data when it would require an overflow
-func (r *RingBuffer) overflowCopy(p []byte) (int, error) {
+func (r *RingBuffer) overflowCopyLocked(p []byte) (int, error) {
 	eidx := len(r.buf) - int(r.end)
 	copy(r.buf[r.end:], p[:eidx])
 	copy(r.buf[0:], p[eidx:])
@@ -154,8 +152,7 @@ func (r *RingBuffer) overflowCopy(p []byte) (int, error) {
 	return len(p), nil
 }
 
-// Lock must already be set before this is called
-func (r *RingBuffer) readBuffer(p []byte) (int, error) {
+func (r *RingBuffer) readBufferLocked(p []byte) (int, error) {
 	n := min(len(p), r.size)
 	if n == 0 {
 		return 0, nil

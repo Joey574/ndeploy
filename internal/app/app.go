@@ -15,14 +15,18 @@ import (
 
 type App struct {
 	workDir string
+	rb      *sink.RingBuffer
 }
 
 func NewApp() *App {
-	return &App{}
+	return &App{
+		rb: sink.NewRingBuffer(16 * 1024 * 1024), // 16MB ring buffer
+	}
 }
 
 func (a *App) Run(args *cli.Args, schema embed.FS) error {
 	var err error
+	sink.PushSinks(a.rb)
 
 	a.workDir, err = a.setupWorkDir(args)
 	if err != nil {
@@ -40,6 +44,7 @@ func (a *App) Run(args *cli.Args, schema embed.FS) error {
 	button := widget.NewButton("Update", func() {
 		formatted := time.Now().Format("Time: 03:04:05")
 		message.SetText(formatted)
+		sink.Println(sink.TRACE, "button pressed :)")
 	})
 
 	w.SetContent(container.NewVBox(message, button))

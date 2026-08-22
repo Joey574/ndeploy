@@ -17,10 +17,7 @@ var schema embed.FS
 func main() {
 	sink.SetFormat(`[\d] [\t] *`)
 	sink.SetLogLevel(sink.TRACE) // TODO : let user define this
-
-	// 8MB ring buffer
-	rb := sink.NewRingBuffer(8 * 1024 * 1024)
-	sink.PushSinks(os.Stdout, rb)
+	sink.PushSinks(os.Stdout)
 
 	args := cli.NewArgs()
 	_, err := args.Parse()
