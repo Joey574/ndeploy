@@ -38,7 +38,11 @@ func (a *App) Run(args *cli.Args, schema embed.FS) error {
 	}
 
 	app := app.NewWithID("ndeploy")
-	w := app.NewWindow("hello")
+	w1 := app.NewWindow("hello")
+	w2 := app.NewWindow("logs")
+	lv := NewLogViewer()
+	w2.SetContent(lv.CanvasObject())
+	go lv.StreamFrom(a.rb)
 
 	message := widget.NewLabel("welcome")
 	button := widget.NewButton("Update", func() {
@@ -47,12 +51,10 @@ func (a *App) Run(args *cli.Args, schema embed.FS) error {
 		sink.Println(sink.TRACE, "button pressed :)")
 	})
 
-	lv := NewLogViewer()
-	w.SetContent(lv.CanvasObject())
-	go lv.StreamFrom(a.rb)
-
-	w.SetContent(container.NewVBox(message, button))
-	w.ShowAndRun()
+	w1.SetContent(container.NewVBox(message, button))
+	w1.Show()
+	w2.Show()
+	app.Run()
 
 	return nil
 }
