@@ -10,6 +10,7 @@ type RingBuffer struct {
 	size     int
 	start    int
 	end      int
+	version  uint64
 	buf      []byte
 
 	mx sync.RWMutex
@@ -25,6 +26,7 @@ func NewRingBuffer(capacity int) *RingBuffer {
 		size:     0,
 		start:    0,
 		end:      0,
+		version:  0,
 		buf:      make([]byte, capacity),
 	}
 }
@@ -41,6 +43,12 @@ func (r *RingBuffer) Close() error {
 	return nil
 }
 
+func (r *RingBuffer) Version() uint64 {
+	r.mx.RLock()
+	defer r.mx.RUnlock()
+	return r.version
+}
+
 func (r *RingBuffer) Write(p []byte) (int, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
@@ -48,6 +56,15 @@ func (r *RingBuffer) Write(p []byte) (int, error) {
 		return 0, fmt.Errorf("buffer is closed")
 	}
 
+	n, err := r.writeLocked(p)
+	if err == nil {
+		r.version++
+	}
+
+	return n, err
+}
+
+func (r *RingBuffer) writeLocked(p []byte) (int, error) {
 	if len(p) >= r.capacity {
 		return r.truncateCopyLocked(p)
 	}
@@ -65,6 +82,8 @@ func (r *RingBuffer) Write(p []byte) (int, error) {
 }
 
 // Reads data from buffer without advancing the start of it
+// if the buffer is bigger than the data available, only the available
+// data will be returned
 func (r *RingBuffer) Read(p []byte) (int, error) {
 	r.mx.RLock()
 	defer r.mx.RUnlock()
@@ -112,7 +131,6 @@ func (r *RingBuffer) isEmptyLocked() bool {
 func (r *RingBuffer) Consume(p []byte) (int, error) {
 	r.mx.Lock()
 	defer r.mx.Unlock()
-
 	if r.buf == nil {
 		return 0, fmt.Errorf("buffer is closed")
 	}
@@ -166,5 +184,4 @@ func (r *RingBuffer) readBufferLocked(p []byte) (int, error) {
 	}
 
 	return n, nil
-
 }

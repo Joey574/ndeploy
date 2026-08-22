@@ -38,6 +38,9 @@ func (a *App) Run(args *cli.Args, schema embed.FS) error {
 		return err
 	}
 
+	lv := NewLogViewer(a.rb)
+	go lv.Run(100 * time.Millisecond)
+
 	fApp := app.NewWithID("ndeploy")
 	w1 := fApp.NewWindow("hello")
 	w2 := fApp.NewWindow("logs")
@@ -45,9 +48,10 @@ func (a *App) Run(args *cli.Args, schema embed.FS) error {
 	w1.Resize(fyne.NewSize(300, 200))
 	w2.Resize(fyne.NewSize(600, 400))
 
-	lv := NewLogViewer()
 	w2.SetContent(lv.CanvasObject())
-	go lv.StreamFrom(a.rb)
+	w2.SetOnClosed(func() {
+		lv.Stop()
+	})
 
 	message := widget.NewLabel("welcome")
 	button := widget.NewButton("Update", func() {
