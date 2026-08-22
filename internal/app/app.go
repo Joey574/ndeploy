@@ -47,6 +47,10 @@ func (a *App) Run(args *cli.Args, schema embed.FS) error {
 		sink.Println(sink.TRACE, "button pressed :)")
 	})
 
+	lv := NewLogViewer()
+	w.SetContent(lv.CanvasObject())
+	go lv.StreamFrom(a.rb)
+
 	w.SetContent(container.NewVBox(message, button))
 	w.ShowAndRun()
 
