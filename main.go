@@ -31,11 +31,14 @@ func main() {
 	}
 
 	// ring buf test
-	rb := sink.NewRingBuffer(1024 * 1024)
+	rb := sink.NewRingBuffer(8)
 
 	rb.Write([]byte("hello world!"))
 	bytes, err := rb.ReadAll()
 	fmt.Println(string(bytes))
+
+	fmt.Println("DEBUG")
+	rb.DebugDump()
 
 	os.Exit(0)
 
