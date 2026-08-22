@@ -66,12 +66,11 @@ func (lv *LogViewer) StreamFrom(r io.Reader) {
 		fyne.Do(func() {
 			lv.builder.WriteString(text)
 			lv.richText.ParseMarkdown("")
-			lv.richText.Segments = []widget.RichTextSegment{
-				&widget.TextSegment{
-					Text:  lv.builder.String(),
-					Style: widget.RichTextStyleInline,
-				},
-			}
+			lv.richText.Segments = append(lv.richText.Segments, &widget.TextSegment{
+				Text:  text,
+				Style: widget.RichTextStyleInline,
+			})
+
 			lv.richText.Refresh()
 			if lv.autoScroll {
 				lv.scroll.ScrollToBottom()
