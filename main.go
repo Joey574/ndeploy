@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"fmt"
 	"ndeploy/v2/internal/app"
 	"ndeploy/v2/internal/cli"
 	"ndeploy/v2/internal/sink"
@@ -28,6 +29,15 @@ func main() {
 
 		sink.Fatalln(err)
 	}
+
+	// ring buf test
+	rb := sink.NewRingBuffer(1024 * 1024)
+
+	rb.Write([]byte("hello world!"))
+	bytes, err := rb.ReadAll()
+	fmt.Println(string(bytes))
+
+	os.Exit(0)
 
 	a := app.NewApp()
 	if err := a.Run(args, schema); err != nil {
