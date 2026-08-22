@@ -155,22 +155,19 @@ func (r *RingBuffer) overflowCopy(p []byte) (int, error) {
 }
 
 // Lock must already be set before this is called
-// TODO: special cases can definitely make this faster
 func (r *RingBuffer) readBuffer(p []byte) (int, error) {
-	idx := r.start
-	count := 0
-
-	for count < len(p) && count < r.size {
-		p[count] = r.buf[idx]
-
-		count++
-		idx = (idx + 1) % r.capacity
+	n := min(len(p), r.size)
+	if n == 0 {
+		return 0, nil
 	}
 
-	return count, nil
-}
+	idx := min(n, r.capacity-r.start)
+	copy(p[:idx], r.buf[r.start:r.start+idx])
 
-func (r *RingBuffer) DebugDump() {
-	fmt.Printf("start='%d', end='%d', size='%d', cap='%d'\n", r.start, r.end, r.size, r.capacity)
-	fmt.Println(string(r.buf))
+	if idx < n {
+		copy(p[idx:n], r.buf[:n-idx])
+	}
+
+	return n, nil
+
 }
