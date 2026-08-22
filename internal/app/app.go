@@ -57,7 +57,8 @@ func (a *App) Run(args *cli.Args, schema embed.FS) error {
 	button := widget.NewButton("Update", func() {
 		formatted := time.Now().Format("Time: 03:04:05")
 		message.SetText(formatted)
-		//sink.Println(sink.TRACE, "button pressed :)")
+
+		sink.Println(sink.TRACE, "button pressed :)")
 	})
 
 	w1.SetContent(container.NewVBox(message, button))
