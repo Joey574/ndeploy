@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
@@ -37,9 +38,13 @@ func (a *App) Run(args *cli.Args, schema embed.FS) error {
 		return err
 	}
 
-	app := app.NewWithID("ndeploy")
-	w1 := app.NewWindow("hello")
-	w2 := app.NewWindow("logs")
+	fApp := app.NewWithID("ndeploy")
+	w1 := fApp.NewWindow("hello")
+	w2 := fApp.NewWindow("logs")
+
+	w1.Resize(fyne.NewSize(300, 200))
+	w2.Resize(fyne.NewSize(600, 400))
+
 	lv := NewLogViewer()
 	w2.SetContent(lv.CanvasObject())
 	go lv.StreamFrom(a.rb)
@@ -48,13 +53,13 @@ func (a *App) Run(args *cli.Args, schema embed.FS) error {
 	button := widget.NewButton("Update", func() {
 		formatted := time.Now().Format("Time: 03:04:05")
 		message.SetText(formatted)
-		sink.Println(sink.TRACE, "button pressed :)")
+		//sink.Println(sink.TRACE, "button pressed :)")
 	})
 
 	w1.SetContent(container.NewVBox(message, button))
 	w1.Show()
 	w2.Show()
-	app.Run()
+	fApp.Run()
 
 	return nil
 }
