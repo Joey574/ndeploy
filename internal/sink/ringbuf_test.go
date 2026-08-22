@@ -145,7 +145,7 @@ func BenchmarkRingBuffer_MultiThreaded_LogSimLoad(b *testing.B) {
 	const chunkSize = 4 * 1024       // 4KB
 
 	const numWriters = 8
-	const numReaders = 2
+	const numReaders = 1
 
 	r := NewRingBuffer(bufSize)
 

@@ -26,7 +26,7 @@ func NewLogViewer(rb *sink.RingBuffer) *LogViewer {
 
 	sc := container.NewScroll(rt)
 
-	return &LogViewer{
+	lv := &LogViewer{
 		rb:  rb,
 		buf: make([]byte, rb.Capacity()),
 
@@ -35,6 +35,12 @@ func NewLogViewer(rb *sink.RingBuffer) *LogViewer {
 		autoScroll: true,
 		stop:       make(chan struct{}),
 	}
+
+	sc.OnScrolled = func(pos fyne.Position) {
+		lv.autoScroll = pos.Y+sc.Size().Height >= sc.Content.Size().Height-4
+	}
+
+	return lv
 }
 
 func (lv *LogViewer) CanvasObject() fyne.CanvasObject {

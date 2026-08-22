@@ -13,7 +13,7 @@ type RingBuffer struct {
 	version  uint64
 	buf      []byte
 
-	mx sync.RWMutex
+	mx sync.Mutex
 }
 
 func NewRingBuffer(capacity int) *RingBuffer {
@@ -40,18 +40,19 @@ func (r *RingBuffer) Close() error {
 	r.size = 0
 	r.start = 0
 	r.end = 0
+	r.version = 0
 	return nil
 }
 
 func (r *RingBuffer) Version() uint64 {
-	r.mx.RLock()
-	defer r.mx.RUnlock()
+	r.mx.Lock()
+	defer r.mx.Unlock()
 	return r.version
 }
 
 func (r *RingBuffer) Capacity() int {
-	r.mx.RLock()
-	defer r.mx.RUnlock()
+	r.mx.Lock()
+	defer r.mx.Unlock()
 	return r.capacity
 }
 
@@ -80,19 +81,19 @@ func (r *RingBuffer) writeLocked(p []byte) (int, error) {
 	}
 
 	r.size = min(r.size+len(p), r.capacity)
-	if r.end+len(p) <= r.capacity {
-		return r.copyLocked(p)
-	}
+	n1 := copy(r.buf[r.end:], p)
+	copy(r.buf, p[n1:])
 
-	return r.overflowCopyLocked(p)
+	r.end = (r.end + len(p)) % r.capacity
+	return len(p), nil
 }
 
 // Reads data from buffer without advancing the start of it
 // if the buffer is bigger than the data available, only the available
 // data will be returned
 func (r *RingBuffer) Read(p []byte) (int, error) {
-	r.mx.RLock()
-	defer r.mx.RUnlock()
+	r.mx.Lock()
+	defer r.mx.Unlock()
 	if r.buf == nil {
 		return 0, fmt.Errorf("buffer is closed")
 	}
@@ -101,8 +102,8 @@ func (r *RingBuffer) Read(p []byte) (int, error) {
 }
 
 func (r *RingBuffer) ReadAll() ([]byte, error) {
-	r.mx.RLock()
-	defer r.mx.RUnlock()
+	r.mx.Lock()
+	defer r.mx.Unlock()
 
 	if r.buf == nil {
 		return nil, fmt.Errorf("buffer is closed")
@@ -114,8 +115,8 @@ func (r *RingBuffer) ReadAll() ([]byte, error) {
 }
 
 func (r *RingBuffer) IsFull() bool {
-	r.mx.RLock()
-	defer r.mx.RUnlock()
+	r.mx.Lock()
+	defer r.mx.Unlock()
 	return r.isFullLocked()
 }
 
@@ -124,8 +125,8 @@ func (r *RingBuffer) isFullLocked() bool {
 }
 
 func (r *RingBuffer) IsEmpty() bool {
-	r.mx.RLock()
-	defer r.mx.RUnlock()
+	r.mx.Lock()
+	defer r.mx.Unlock()
 	return r.isEmptyLocked()
 }
 
@@ -157,23 +158,6 @@ func (r *RingBuffer) truncateCopyLocked(p []byte) (int, error) {
 	r.end = 0
 	r.size = r.capacity
 	return len(r.buf), nil
-}
-
-// Lock must already be set before this is called
-// Handles copies for when data fits into the buffer, without an overflow
-func (r *RingBuffer) copyLocked(p []byte) (int, error) {
-	copy(r.buf[r.end:], p)
-	r.end = (r.end + len(p)) % r.capacity
-	return len(p), nil
-}
-
-// Handles copy for data when it would require an overflow
-func (r *RingBuffer) overflowCopyLocked(p []byte) (int, error) {
-	eidx := len(r.buf) - int(r.end)
-	copy(r.buf[r.end:], p[:eidx])
-	copy(r.buf[0:], p[eidx:])
-	r.end = len(p) - eidx
-	return len(p), nil
 }
 
 func (r *RingBuffer) readBufferLocked(p []byte) (int, error) {
