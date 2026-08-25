@@ -2,6 +2,7 @@ package addnode
 
 import (
 	"ndeploy/v2/internal/app"
+	"ndeploy/v2/internal/sink"
 	"ndeploy/v2/internal/ui/ids"
 
 	"fyne.io/fyne/v2"
@@ -11,12 +12,16 @@ import (
 func New(a *app.App) (fyne.Window, func()) {
 	w := a.Fyne.NewWindow(ids.AddNodeID)
 
-	entry := widget.NewEntry()
+	userEntry := widget.NewEntry()
+	hostEntry := widget.NewEntry()
 
 	form := &widget.Form{
 		Items: []*widget.FormItem{
-			{Text: "user", Widget: entry},
-			{Text: "host", Widget: entry},
+			{Text: "user", Widget: userEntry},
+			{Text: "host", Widget: hostEntry},
+		},
+		OnSubmit: func() {
+			sink.Printf(sink.DEBUG, "add node request, user='%s', host='%s'\n", userEntry.Text, hostEntry.Text)
 		},
 	}
 
