@@ -5,7 +5,9 @@ import (
 	"ndeploy/v2/internal/app"
 	"ndeploy/v2/internal/cli"
 	"ndeploy/v2/internal/sink"
+	"ndeploy/v2/internal/ui/ids"
 	"ndeploy/v2/internal/ui/logviewer"
+	"ndeploy/v2/internal/ui/mainwindow"
 	"os"
 
 	"github.com/jessevdk/go-flags"
@@ -31,9 +33,10 @@ func main() {
 	}
 
 	a := app.NewApp()
-	a.Register(logviewer.LogViewerID, logviewer.New)
-	a.OpenOrFocus(logviewer.LogViewerID)
+	a.Register(ids.MainWindowID, mainwindow.New)
+	a.Register(ids.LogViewerID, logviewer.New)
 
+	a.OpenOrFocus(ids.MainWindowID)
 	if err := a.Run(args, schema); err != nil {
 		sink.Fatalln(err)
 	}

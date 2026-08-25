@@ -3,6 +3,7 @@ package logviewer
 import (
 	"ndeploy/v2/internal/app"
 	"ndeploy/v2/internal/sink"
+	"ndeploy/v2/internal/ui/ids"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -10,9 +11,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-const (
-	LogViewerID = "logviewer"
-)
+const ()
 
 type logViewer struct {
 	rb      *sink.RingBuffer
@@ -26,10 +25,13 @@ type logViewer struct {
 }
 
 func New(a *app.App) (fyne.Window, func()) {
-	w := a.Fyne.NewWindow(LogViewerID)
+	w := a.Fyne.NewWindow(ids.LogViewerID)
 	lv := newLogViewer(a.RingBuffer)
 	go lv.Run(100 * time.Millisecond)
+
 	w.SetContent(lv.CanvasObject())
+	w.Resize(fyne.NewSize(600, 400))
+
 	return w, func() { lv.Stop() }
 }
 
