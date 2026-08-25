@@ -24,6 +24,8 @@ type App struct {
 func NewApp() *App {
 	return &App{
 		Fyne:       app.NewWithID("ndeploy"),
+		windows:    make(map[string]fyne.Window),
+		factories:  make(map[string]WindowFactory),
 		RingBuffer: sink.NewRingBuffer(16 * 1024 * 1024), // 16MB ring buffer
 	}
 }
