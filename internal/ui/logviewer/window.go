@@ -1,6 +1,7 @@
-package app
+package logviewer
 
 import (
+	"ndeploy/v2/internal/app"
 	"ndeploy/v2/internal/sink"
 	"time"
 
@@ -9,7 +10,11 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-type LogViewer struct {
+const (
+	LogViewerID = "logviewer"
+)
+
+type logViewer struct {
 	rb      *sink.RingBuffer
 	lastVer uint64
 	buf     []byte
@@ -20,13 +25,21 @@ type LogViewer struct {
 	stop       chan struct{}
 }
 
-func NewLogViewer(rb *sink.RingBuffer) *LogViewer {
+func New(a *app.App) (fyne.Window, func()) {
+	w := a.Fyne.NewWindow(LogViewerID)
+	lv := newLogViewer(a.RingBuffer)
+	go lv.Run(100 * time.Millisecond)
+	w.SetContent(lv.CanvasObject())
+	return w, func() { lv.Stop() }
+}
+
+func newLogViewer(rb *sink.RingBuffer) *logViewer {
 	rt := widget.NewRichTextWithText("")
 	rt.Wrapping = fyne.TextWrapOff
 
 	sc := container.NewScroll(rt)
 
-	lv := &LogViewer{
+	lv := &logViewer{
 		rb:  rb,
 		buf: make([]byte, rb.Capacity()),
 
@@ -43,11 +56,11 @@ func NewLogViewer(rb *sink.RingBuffer) *LogViewer {
 	return lv
 }
 
-func (lv *LogViewer) CanvasObject() fyne.CanvasObject {
+func (lv *logViewer) CanvasObject() fyne.CanvasObject {
 	return lv.scroll
 }
 
-func (lv *LogViewer) Run(interval time.Duration) {
+func (lv *logViewer) Run(interval time.Duration) {
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
@@ -82,6 +95,6 @@ func (lv *LogViewer) Run(interval time.Duration) {
 	}
 }
 
-func (lv *LogViewer) Stop() {
+func (lv *logViewer) Stop() {
 	close(lv.stop)
 }

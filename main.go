@@ -5,6 +5,7 @@ import (
 	"ndeploy/v2/internal/app"
 	"ndeploy/v2/internal/cli"
 	"ndeploy/v2/internal/sink"
+	"ndeploy/v2/internal/ui/logviewer"
 	"os"
 
 	"github.com/jessevdk/go-flags"
@@ -30,6 +31,9 @@ func main() {
 	}
 
 	a := app.NewApp()
+	a.Register(logviewer.LogViewerID, logviewer.New)
+	a.OpenOrFocus(logviewer.LogViewerID)
+
 	if err := a.Run(args, schema); err != nil {
 		sink.Fatalln(err)
 	}
