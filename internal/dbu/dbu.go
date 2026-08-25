@@ -5,7 +5,7 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
-	"ndeploy/v2/internal/database"
+	"ndeploy/v2/internal/db"
 	"ndeploy/v2/internal/sink"
 	"os"
 	"path/filepath"
@@ -56,14 +56,14 @@ func CreateIfNotExists(dir string, schema embed.FS) error {
 	return nil
 }
 
-func ConnectTo(dir string) (*database.Queries, error) {
+func ConnectTo(dir string) (*db.Queries, error) {
 	sink.Println(sink.TRACE, "connecting to database")
-	db, err := sql.Open("sqlite", fmt.Sprintf("file:%s?mode=rw", path(dir)))
+	sqldb, err := sql.Open("sqlite", fmt.Sprintf("file:%s?mode=rw", path(dir)))
 	if err != nil {
 		return nil, err
 	}
 
-	return database.New(db), nil
+	return db.New(sqldb), nil
 }
 
 func Create(dir string, schema embed.FS) error {
