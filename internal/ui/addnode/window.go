@@ -22,6 +22,7 @@ func New(a *app.App) (fyne.Window, func()) {
 		},
 		OnSubmit: func() {
 			sink.Printf(sink.DEBUG, "add node request, user='%s', host='%s'\n", userEntry.Text, hostEntry.Text)
+
 		},
 	}
 
