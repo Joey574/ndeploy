@@ -20,7 +20,13 @@
     "d /home/controller/.config 0755 controller users -"
   ];
 
-  services.xserver.displayManager.lightdm.enable = true;
+  #services.xserver.displayManager.lightdm.enable = true;
+
+  services.displayManager.sddm = {
+    enable = true;
+    theme = "chili";
+  };
+
   services.displayManager.autoLogin = {
     enable = true;
     user = "controller";
@@ -43,6 +49,6 @@
     };
   };
 
-  environment.systemPackages = with pkgs; [ mesa ndeploy ];
+  environment.systemPackages = with pkgs; [ mesa sddm-chili-theme ndeploy ];
   system.stateVersion = "26.05";
 }
