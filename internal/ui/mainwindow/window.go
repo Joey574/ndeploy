@@ -5,6 +5,7 @@ import (
 	"ndeploy/v2/internal/ui/ids"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 )
 
@@ -13,10 +14,15 @@ func New(a *app.App) (fyne.Window, func()) {
 
 	w.Resize(fyne.NewSize(600, 400))
 
-	btn := widget.NewButton("Logs", func() {
-		a.OpenOrFocus(ids.LogViewerID)
-	})
+	list := container.NewVBox(
+		widget.NewButton("Logs", func() {
+			a.OpenOrFocus(ids.LogViewerID)
+		}),
+		widget.NewButton("Add Node", func() {
+			a.OpenOrFocus(ids.AddNodeID)
+		}),
+	)
 
-	w.SetContent(btn)
+	w.SetContent(list)
 	return w, nil
 }

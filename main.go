@@ -5,6 +5,7 @@ import (
 	"ndeploy/v2/internal/app"
 	"ndeploy/v2/internal/cli"
 	"ndeploy/v2/internal/sink"
+	"ndeploy/v2/internal/ui/addnode"
 	"ndeploy/v2/internal/ui/ids"
 	"ndeploy/v2/internal/ui/logviewer"
 	"ndeploy/v2/internal/ui/mainwindow"
@@ -35,6 +36,7 @@ func main() {
 	a := app.NewApp()
 	a.Register(ids.MainWindowID, mainwindow.New)
 	a.Register(ids.LogViewerID, logviewer.New)
+	a.Register(ids.AddNodeID, addnode.New)
 
 	a.OpenOrFocus(ids.MainWindowID)
 	if err := a.Run(args, schema); err != nil {
