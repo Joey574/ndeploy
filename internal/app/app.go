@@ -4,12 +4,15 @@ import (
 	"embed"
 	"ndeploy/v2/internal/cli"
 	"ndeploy/v2/internal/dbu"
+	"path/filepath"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"github.com/Joey574/sink/v2/pkg/ds/rb"
 	"github.com/Joey574/sink/v2/pkg/sink"
 )
+
+const dbName = "sqlite.db"
 
 type WindowFactory func(a *App) (fyne.Window, func())
 
@@ -48,7 +51,7 @@ func NewApp(args *cli.Args, options ...func(*App)) (*App, error) {
 	a.WorkDir = dir
 
 	// connect to database
-	a.Dbu = dbu.New(a.WorkDir)
+	a.Dbu = dbu.New(filepath.Join(a.WorkDir, dbName))
 
 	for _, o := range options {
 		o(a)
