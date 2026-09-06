@@ -38,7 +38,7 @@ func NewApp(args *cli.Args, options ...func(*App)) (*App, error) {
 		Sink: sink.New(
 			sink.EnableStdOut(),
 			sink.SetLogLevel(sink.TRACE),
-			sink.SetFormat(`[\d] [\t] *`),
+			sink.SetFormat(`[\d] [\t] \c *`),
 		),
 	}
 	a.Sink.PushSinks(a.RingBuffer)
@@ -50,8 +50,11 @@ func NewApp(args *cli.Args, options ...func(*App)) (*App, error) {
 	}
 	a.WorkDir = dir
 
-	// connect to database
-	a.Dbu = dbu.New(filepath.Join(a.WorkDir, dbName))
+	// init dbu
+	a.Dbu = dbu.New(
+		filepath.Join(a.WorkDir, dbName),
+		dbu.SetSink(a.Sink),
+	)
 
 	for _, o := range options {
 		o(a)
@@ -72,7 +75,7 @@ func (a *App) OpenOrFocus(id string) fyne.Window {
 
 	factory, ok := a.factories[id]
 	if !ok {
-		panic("no window registered for idd: " + id)
+		panic("no window registered for id: " + id)
 	}
 
 	w, cleanup := factory(a)
@@ -88,7 +91,6 @@ func (a *App) OpenOrFocus(id string) fyne.Window {
 }
 
 func (a *App) Run(args *cli.Args, schema embed.FS) error {
-
 	if err := a.Dbu.CreateIfNotExists(schema); err != nil {
 		return err
 	}

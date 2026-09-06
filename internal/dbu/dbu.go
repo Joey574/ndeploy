@@ -12,11 +12,6 @@ import (
 	"github.com/Joey574/sink/v2/pkg/sink"
 )
 
-const (
-	dbName     = "db.sqlite"
-	schemaPath = "sql/schema"
-)
-
 type Dbu struct {
 	path string
 	sink *sink.Sink
