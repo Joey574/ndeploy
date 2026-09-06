@@ -2,7 +2,6 @@ package ssh
 
 import (
 	"fmt"
-	"ndeploy/v2/internal/sink"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -16,7 +15,7 @@ type Client struct {
 func NewClient(user, host string) (*Client, error) {
 	agent, err := connectToAgent()
 	if err != nil {
-		sink.Printf(sink.WARN, "%v\n", err)
+		//sink.Printf(sink.WARN, "%v\n", err)
 		return nil, err
 	}
 

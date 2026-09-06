@@ -4,12 +4,11 @@ import (
 	"context"
 	"ndeploy/v2/internal/app"
 	"ndeploy/v2/internal/db"
-	"ndeploy/v2/internal/dbu"
-	"ndeploy/v2/internal/sink"
 	"ndeploy/v2/internal/ui/ids"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/widget"
+	"github.com/Joey574/sink/v2/pkg/sink"
 )
 
 func New(a *app.App) (fyne.Window, func()) {
@@ -31,14 +30,10 @@ func New(a *app.App) (fyne.Window, func()) {
 			user := userEntry.Text
 			host := hostEntry.Text
 
-			sink.Printf(sink.DEBUG, "add node request, user='%s', host='%s'\n", user, host)
-			queries, err := dbu.ConnectTo(a.WorkDir)
-			if err != nil {
-				sink.Printf(sink.ERROR, "add node error: %v\n", err)
-				return
-			}
+			a.Sink.Printf(sink.DEBUG, "add node request, user='%s', host='%s'\n", user, host)
+			queries := a.Dbu.Queries()
 
-			_, err = queries.CreateNode(
+			_, err := queries.CreateNode(
 				ctx, db.CreateNodeParams{
 					User: user,
 					Host: host,
@@ -46,7 +41,7 @@ func New(a *app.App) (fyne.Window, func()) {
 			)
 
 			if err != nil {
-				sink.Printf(sink.ERROR, "add node db error: %v\n", err)
+				a.Sink.Printf(sink.ERROR, "add node db error: %v\n", err)
 				return
 			}
 

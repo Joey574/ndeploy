@@ -2,8 +2,9 @@ package app
 
 import (
 	"ndeploy/v2/internal/cli"
-	"ndeploy/v2/internal/sink"
 	"os"
+
+	"github.com/Joey574/sink/v2/pkg/sink"
 )
 
 func (a *App) setupWorkDir(args *cli.Args) (string, error) {
@@ -21,6 +22,6 @@ func (a *App) setupWorkDir(args *cli.Args) (string, error) {
 		workDir = args.WorkDir
 	}
 
-	sink.Printf(sink.DEBUG, "work directory: %s\n", workDir)
+	a.Sink.Printf(sink.DEBUG, "work directory: %s\n", workDir)
 	return workDir, os.MkdirAll(workDir, 0o750)
 }

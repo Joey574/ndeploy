@@ -2,19 +2,17 @@ package logviewer
 
 import (
 	"ndeploy/v2/internal/app"
-	"ndeploy/v2/internal/sink"
 	"ndeploy/v2/internal/ui/ids"
 	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
+	"github.com/Joey574/sink/v2/pkg/ds/rb"
 )
 
-const ()
-
 type logViewer struct {
-	rb      *sink.RingBuffer
+	rb      *rb.RingBuffer
 	lastVer uint64
 	buf     []byte
 
@@ -35,7 +33,7 @@ func New(a *app.App) (fyne.Window, func()) {
 	return w, func() { lv.Stop() }
 }
 
-func newLogViewer(rb *sink.RingBuffer) *logViewer {
+func newLogViewer(rb *rb.RingBuffer) *logViewer {
 	rt := widget.NewRichTextWithText("")
 	rt.Wrapping = fyne.TextWrapOff
 

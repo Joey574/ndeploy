@@ -4,10 +4,11 @@ import (
 	"embed"
 	"ndeploy/v2/internal/cli"
 	"ndeploy/v2/internal/dbu"
-	"ndeploy/v2/internal/sink"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
+	"github.com/Joey574/sink/v2/pkg/ds/rb"
+	"github.com/Joey574/sink/v2/pkg/sink"
 )
 
 type WindowFactory func(a *App) (fyne.Window, func())
@@ -17,17 +18,43 @@ type App struct {
 	windows   map[string]fyne.Window
 	factories map[string]WindowFactory
 
-	WorkDir    string
-	RingBuffer *sink.RingBuffer
+	WorkDir string
+
+	Sink       *sink.Sink
+	Dbu        *dbu.Dbu
+	RingBuffer *rb.RingBuffer
 }
 
-func NewApp() *App {
-	return &App{
-		Fyne:       app.NewWithID("ndeploy"),
-		windows:    make(map[string]fyne.Window),
-		factories:  make(map[string]WindowFactory),
-		RingBuffer: sink.NewRingBuffer(16 * 1024 * 1024), // 16MB ring buffer
+func NewApp(args *cli.Args, options ...func(*App)) (*App, error) {
+	a := &App{
+		Fyne:      app.NewWithID("ndeploy"),
+		windows:   make(map[string]fyne.Window),
+		factories: make(map[string]WindowFactory),
+
+		RingBuffer: rb.New(16 * 1024 * 1024), // 16MB ring buffer
+		Sink: sink.New(
+			sink.EnableStdOut(),
+			sink.SetLogLevel(sink.TRACE),
+			sink.SetFormat(`[\d] [\t] *`),
+		),
 	}
+	a.Sink.PushSinks(a.RingBuffer)
+
+	// setup workdir
+	dir, err := a.setupWorkDir(args)
+	if err != nil {
+		return nil, err
+	}
+	a.WorkDir = dir
+
+	// connect to database
+	a.Dbu = dbu.New(a.WorkDir)
+
+	for _, o := range options {
+		o(a)
+	}
+
+	return a, nil
 }
 
 func (a *App) Register(id string, factory WindowFactory) {
@@ -58,15 +85,12 @@ func (a *App) OpenOrFocus(id string) fyne.Window {
 }
 
 func (a *App) Run(args *cli.Args, schema embed.FS) error {
-	var err error
-	sink.PushSinks(a.RingBuffer)
 
-	a.WorkDir, err = a.setupWorkDir(args)
-	if err != nil {
+	if err := a.Dbu.CreateIfNotExists(schema); err != nil {
 		return err
 	}
 
-	if err := dbu.CreateIfNotExists(a.WorkDir, schema); err != nil {
+	if err := a.Dbu.Connect(); err != nil {
 		return err
 	}
 
