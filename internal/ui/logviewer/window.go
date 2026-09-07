@@ -74,7 +74,7 @@ func (lv *logViewer) Run(interval time.Duration) {
 				continue
 			}
 
-			n, err := lv.rb.Read(lv.buf)
+			n, err := lv.rb.Peek(lv.buf)
 			if err != nil {
 				return
 			}
