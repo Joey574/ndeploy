@@ -56,6 +56,7 @@ func New(a *app.App) (fyne.Window, func()) {
 				a.Sink.Printf(sink.ERROR, "new ssh client: %v\n", err)
 				return
 			}
+			defer client.Close()
 
 			c, err := client.Dial()
 			if err != nil {

@@ -2,17 +2,19 @@ package ssh
 
 import (
 	"fmt"
+	"net"
 
 	"github.com/Joey574/sink/v2/pkg/sink"
 	"golang.org/x/crypto/ssh"
 )
 
 type Client struct {
-	user string
-	host string
+	user      string
+	host      string
+	agentConn net.Conn
 
-	config *ssh.ClientConfig
 	sink   *sink.Sink
+	config *ssh.ClientConfig
 }
 
 func NewClient(user, host string, options ...func(*Client)) (*Client, error) {
@@ -32,12 +34,13 @@ func NewClient(user, host string, options ...func(*Client)) (*Client, error) {
 
 	// connect to agent after options are applied so we
 	// write to the correct sink
-	agent, err := connectToAgent()
+	agent, conn, err := connectToAgent()
 	if err != nil {
 		c.sink.Printf(sink.WARN, "%v\n", err)
 		return nil, err
 	}
 
+	c.agentConn = conn
 	c.config.Auth = append(c.config.Auth, ssh.PublicKeysCallback(agent.Signers))
 	return c, nil
 }
@@ -62,4 +65,12 @@ func Dial(user, host string) (*ssh.Session, error) {
 	}
 
 	return client.NewSession()
+}
+
+func (c *Client) Close() error {
+	if c.agentConn != nil {
+		return c.agentConn.Close()
+	}
+
+	return nil
 }

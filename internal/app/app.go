@@ -38,7 +38,7 @@ func NewApp(args *cli.Args, options ...func(*App)) (*App, error) {
 		Sink: sink.New(
 			sink.EnableStdOut(),
 			sink.SetLogLevel(sink.TRACE),
-			sink.SetFormat(`[\d] [\t] \c *`),
+			sink.SetFormat(`[\d] [\t] *`),
 		),
 	}
 	a.Sink.PushSinks(a.RingBuffer)

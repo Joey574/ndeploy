@@ -6,6 +6,10 @@ github.com/BurntSushi/toml v1.6.0 h1:dRaEfpa2VI55EwlIW72hMRHdWouJeRF7TPYhI+AUQjk
 github.com/BurntSushi/toml v1.6.0/go.mod h1:ukJfTF/6rtPPRCnwkur4qwRxa8vTRFBF0uk2lLoLwho=
 github.com/Joey574/sink/v2 v2.0.0-20260906225627-e3b985b635d0 h1:vOXTGn4Gr+62niwo72eG43Pph3Pn5OfpcVfsmSd2xIU=
 github.com/Joey574/sink/v2 v2.0.0-20260906225627-e3b985b635d0/go.mod h1:z3nFKP6OQTVpYxwkKONc+RjY1bSLZ6hLkQbsUs2jIvU=
+github.com/Joey574/sink/v2 v2.0.0-20260910204432-72550b38d3f8 h1:JaHJ+wevvqIPKLmDiKbka2+P0dFqjXgDwD6nYtfD/S8=
+github.com/Joey574/sink/v2 v2.0.0-20260910204432-72550b38d3f8/go.mod h1:z3nFKP6OQTVpYxwkKONc+RjY1bSLZ6hLkQbsUs2jIvU=
+github.com/Joey574/sink/v2 v2.0.0-20260910205810-1762e6546636 h1:k8Q4T3BBW0tk2GR/F8qwmMeVVmNWzlC9lw89+9+/L0o=
+github.com/Joey574/sink/v2 v2.0.0-20260910205810-1762e6546636/go.mod h1:z3nFKP6OQTVpYxwkKONc+RjY1bSLZ6hLkQbsUs2jIvU=
 github.com/anthonynsimon/bild v0.14.0 h1:IFRkmKdNdqmexXHfEU7rPlAmdUZ8BDZEGtGHDnGWync=
 github.com/anthonynsimon/bild v0.14.0/go.mod h1:hcvEAyBjTW69qkKJTfpcDQ83sSZHxwOunsseDfeQhUs=
 github.com/clipperhouse/uax29/v2 v2.2.0 h1:ChwIKnQN3kcZteTXMgb1wztSgaU+ZemkgWdohwgs8tY=
