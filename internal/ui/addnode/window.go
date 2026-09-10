@@ -4,6 +4,7 @@ import (
 	"context"
 	"ndeploy/v2/internal/app"
 	"ndeploy/v2/internal/db"
+	"ndeploy/v2/internal/ssh"
 	"ndeploy/v2/internal/ui/ids"
 
 	"fyne.io/fyne/v2"
@@ -45,7 +46,24 @@ func New(a *app.App) (fyne.Window, func()) {
 				return
 			}
 
-			w.Close()
+			// at this point any error is considered
+			// non-"fatal" and we should close cleanly
+			defer w.Close()
+
+			// run an initial test connection with the node
+			client, err := ssh.NewClient(user, host, ssh.SetSink(a.Sink))
+			if err != nil {
+				a.Sink.Printf(sink.ERROR, "new ssh client: %v\n", err)
+				return
+			}
+
+			_, err = client.Dial()
+			if err != nil {
+				a.Sink.Printf(sink.ERROR, "ssh dial: %v\n", err)
+				return
+			}
+
+			a.Sink.Println(sink.DEBUG, "connection with node succesful")
 		},
 	}
 
