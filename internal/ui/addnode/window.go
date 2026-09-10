@@ -57,12 +57,13 @@ func New(a *app.App) (fyne.Window, func()) {
 				return
 			}
 
-			_, err = client.Dial()
+			c, err := client.Dial()
 			if err != nil {
 				a.Sink.Printf(sink.ERROR, "ssh dial: %v\n", err)
 				return
 			}
 
+			c.Close()
 			a.Sink.Println(sink.DEBUG, "connection with node succesful")
 		},
 	}
