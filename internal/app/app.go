@@ -55,6 +55,7 @@ func NewApp(args *cli.Args, options ...func(*App)) (*App, error) {
 		filepath.Join(a.WorkDir, dbName),
 		dbu.SetSink(a.Sink),
 	)
+	a.Sink.PushStores(dbu.NewDBStore("test", a.Dbu))
 
 	for _, o := range options {
 		o(a)

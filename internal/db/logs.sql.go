@@ -7,27 +7,26 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 )
 
-const createNamedBlobLog = `-- name: CreateNamedBlobLog :one
-INSERT INTO logs(level, logger_name, message, metadata)
+const createLog = `-- name: CreateLog :one
+INSERT INTO logs(source, level, message, metadata)
 VALUES(?, ?, ?, ?)
-RETURNING id, timestamp, level, logger_name, message, json(metadata)
+RETURNING id, timestamp, source, level, message, json(metadata)
 `
 
-type CreateNamedBlobLogParams struct {
-	Level      string          `json:"level"`
-	LoggerName sql.NullString  `json:"logger_name"`
-	Message    string          `json:"message"`
-	Metadata   json.RawMessage `json:"metadata"`
+type CreateLogParams struct {
+	Source   string          `json:"source"`
+	Level    string          `json:"level"`
+	Message  string          `json:"message"`
+	Metadata json.RawMessage `json:"metadata"`
 }
 
-func (q *Queries) CreateNamedBlobLog(ctx context.Context, arg CreateNamedBlobLogParams) (Log, error) {
-	row := q.db.QueryRowContext(ctx, createNamedBlobLog,
+func (q *Queries) CreateLog(ctx context.Context, arg CreateLogParams) (Log, error) {
+	row := q.db.QueryRowContext(ctx, createLog,
+		arg.Source,
 		arg.Level,
-		arg.LoggerName,
 		arg.Message,
 		arg.Metadata,
 	)
@@ -35,87 +34,92 @@ func (q *Queries) CreateNamedBlobLog(ctx context.Context, arg CreateNamedBlobLog
 	err := row.Scan(
 		&i.ID,
 		&i.Timestamp,
+		&i.Source,
 		&i.Level,
-		&i.LoggerName,
 		&i.Message,
 		&i.Metadata,
 	)
 	return i, err
 }
 
-const createNamedLog = `-- name: CreateNamedLog :one
-INSERT INTO logs(level, logger_name, message)
-VALUES(?, ?, ?)
-RETURNING id, timestamp, level, logger_name, message, json(metadata)
+const getNLogs = `-- name: GetNLogs :many
+SELECT id, timestamp, source, level, message, json(metadata) FROM logs
+LIMIT ? OFFSET ?
 `
 
-type CreateNamedLogParams struct {
-	Level      string         `json:"level"`
-	LoggerName sql.NullString `json:"logger_name"`
-	Message    string         `json:"message"`
+type GetNLogsParams struct {
+	Limit  int64 `json:"limit"`
+	Offset int64 `json:"offset"`
 }
 
-func (q *Queries) CreateNamedLog(ctx context.Context, arg CreateNamedLogParams) (Log, error) {
-	row := q.db.QueryRowContext(ctx, createNamedLog, arg.Level, arg.LoggerName, arg.Message)
-	var i Log
-	err := row.Scan(
-		&i.ID,
-		&i.Timestamp,
-		&i.Level,
-		&i.LoggerName,
-		&i.Message,
-		&i.Metadata,
-	)
-	return i, err
+func (q *Queries) GetNLogs(ctx context.Context, arg GetNLogsParams) ([]Log, error) {
+	rows, err := q.db.QueryContext(ctx, getNLogs, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Log
+	for rows.Next() {
+		var i Log
+		if err := rows.Scan(
+			&i.ID,
+			&i.Timestamp,
+			&i.Source,
+			&i.Level,
+			&i.Message,
+			&i.Metadata,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
-const createUnnamedBlobLog = `-- name: CreateUnnamedBlobLog :one
-INSERT INTO logs(level, message, metadata)
-VALUES (?, ?, ?)
-RETURNING id, timestamp, level, logger_name, message, json(metadata)
+const getNLogsFromSource = `-- name: GetNLogsFromSource :many
+SELECT id, timestamp, source, level, message, json(metadata) FROM logs
+WHERE source = ?
+LIMIT ? OFFSET ?
 `
 
-type CreateUnnamedBlobLogParams struct {
-	Level    string          `json:"level"`
-	Message  string          `json:"message"`
-	Metadata json.RawMessage `json:"metadata"`
+type GetNLogsFromSourceParams struct {
+	Source string `json:"source"`
+	Limit  int64  `json:"limit"`
+	Offset int64  `json:"offset"`
 }
 
-func (q *Queries) CreateUnnamedBlobLog(ctx context.Context, arg CreateUnnamedBlobLogParams) (Log, error) {
-	row := q.db.QueryRowContext(ctx, createUnnamedBlobLog, arg.Level, arg.Message, arg.Metadata)
-	var i Log
-	err := row.Scan(
-		&i.ID,
-		&i.Timestamp,
-		&i.Level,
-		&i.LoggerName,
-		&i.Message,
-		&i.Metadata,
-	)
-	return i, err
-}
-
-const createUnnamedLog = `-- name: CreateUnnamedLog :one
-INSERT INTO logs(level, message)
-VALUES (?, ?)
-RETURNING id, timestamp, level, logger_name, message, json(metadata)
-`
-
-type CreateUnnamedLogParams struct {
-	Level   string `json:"level"`
-	Message string `json:"message"`
-}
-
-func (q *Queries) CreateUnnamedLog(ctx context.Context, arg CreateUnnamedLogParams) (Log, error) {
-	row := q.db.QueryRowContext(ctx, createUnnamedLog, arg.Level, arg.Message)
-	var i Log
-	err := row.Scan(
-		&i.ID,
-		&i.Timestamp,
-		&i.Level,
-		&i.LoggerName,
-		&i.Message,
-		&i.Metadata,
-	)
-	return i, err
+func (q *Queries) GetNLogsFromSource(ctx context.Context, arg GetNLogsFromSourceParams) ([]Log, error) {
+	rows, err := q.db.QueryContext(ctx, getNLogsFromSource, arg.Source, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Log
+	for rows.Next() {
+		var i Log
+		if err := rows.Scan(
+			&i.ID,
+			&i.Timestamp,
+			&i.Source,
+			&i.Level,
+			&i.Message,
+			&i.Metadata,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

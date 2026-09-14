@@ -1,19 +1,13 @@
--- name: CreateUnnamedLog :one
-INSERT INTO logs(level, message)
-VALUES (?, ?)
-RETURNING *;
-
--- name: CreateNamedLog :one
-INSERT INTO logs(level, logger_name, message)
-VALUES(?, ?, ?)
-RETURNING *;
-
--- name: CreateUnnamedBlobLog :one
-INSERT INTO logs(level, message, metadata)
-VALUES (?, ?, ?)
-RETURNING *;
-
--- name: CreateNamedBlobLog :one
-INSERT INTO logs(level, logger_name, message, metadata)
+-- name: CreateLog :one
+INSERT INTO logs(source, level, message, metadata)
 VALUES(?, ?, ?, ?)
 RETURNING *;
+
+-- name: GetNLogs :many
+SELECT * FROM logs
+LIMIT ? OFFSET ?;
+
+-- name: GetNLogsFromSource :many
+SELECT * FROM logs
+WHERE source = ?
+LIMIT ? OFFSET ?;

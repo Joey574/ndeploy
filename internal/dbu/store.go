@@ -2,7 +2,6 @@ package dbu
 
 import (
 	"context"
-	"database/sql"
 	"ndeploy/v2/internal/db"
 	"sync"
 
@@ -37,15 +36,13 @@ func (s *DbStore) WriteWithCtx(ctx context.Context, level sink.LogLevel, p []byt
 
 func (s *DbStore) writeWithCtxLocked(ctx context.Context, level sink.LogLevel, p []byte) error {
 	q := s.dbu.Queries()
-	_, err := q.CreateNamedLog(
+	_, err := q.CreateLog(
 		ctx,
-		db.CreateNamedLogParams{
-			Level:   level.String(),
-			Message: string(p),
-			LoggerName: sql.NullString{
-				String: s.name,
-				Valid:  true,
-			},
+		db.CreateLogParams{
+			Source:   s.name,
+			Level:    level.String(),
+			Message:  string(p),
+			Metadata: nil,
 		})
 
 	return err

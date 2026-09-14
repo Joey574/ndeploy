@@ -5,18 +5,17 @@
 package db
 
 import (
-	"database/sql"
 	"encoding/json"
 	"time"
 )
 
 type Log struct {
-	ID         int64           `json:"id"`
-	Timestamp  time.Time       `json:"timestamp"`
-	Level      string          `json:"level"`
-	LoggerName sql.NullString  `json:"logger_name"`
-	Message    string          `json:"message"`
-	Metadata   json.RawMessage `json:"metadata"`
+	ID        int64           `json:"id"`
+	Timestamp time.Time       `json:"timestamp"`
+	Source    string          `json:"source"`
+	Level     string          `json:"level"`
+	Message   string          `json:"message"`
+	Metadata  json.RawMessage `json:"metadata"`
 }
 
 type Node struct {
