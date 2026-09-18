@@ -53,6 +53,13 @@
         })
       ];
 
+      postInstall = ''
+        install -Dm644 assets/icon.svg \
+            $out/share/icons/hicolor/scalable/apps/ndeploy.svg
+      '';
+
+      meta.mainProgram = "ndeploy";
+
       checks.${system}.fleet-test = pkgs.testers.runNixOSTest {
         name = "ndeploy-test";
 
