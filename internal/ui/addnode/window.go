@@ -13,6 +13,7 @@ import (
 
 func New(a *app.App) (fyne.Window, func()) {
 	w := a.Fyne.NewWindow(ids.AddNodeID)
+	w.Resize(fyne.NewSize(100, 200))
 
 	userEntry := widget.NewEntry()
 	userEntry.SetPlaceHolder("remote user ex admin")
@@ -30,7 +31,12 @@ func New(a *app.App) (fyne.Window, func()) {
 			user := userEntry.Text
 			host := hostEntry.Text
 
-			a.Sink.Printf(sink.DEBUG, "add node request, user='%s', host='%s'\n", user, host)
+			snk := sink.New(
+				sink.Wrap(a.Sink),
+				sink.SetName("addnode"),
+			)
+
+			snk.Printf(sink.DEBUG, "add node request, user='%s', host='%s'\n", user, host)
 			queries := a.Dbu.Queries()
 
 			n, err := queries.CreateNode(
@@ -41,16 +47,17 @@ func New(a *app.App) (fyne.Window, func()) {
 			)
 
 			if err != nil {
-				a.Sink.Printf(sink.ERROR, "create node failed: %v\n", err)
+				snk.Printf(sink.ERROR, "create node failed: %v\n", err)
 				return
 			}
 			defer w.Close()
 
 			if err := a.Engine.TestConnection(&n); err != nil {
-				a.Sink.Printf(sink.WARN, "test connection failed: %v\n", err)
+				snk.Printf(sink.WARN, "test connection failed: %v\n", err)
+				return
 			}
 
-			a.Sink.Println(sink.DEBUG, "connection with node succesful")
+			snk.Println(sink.DEBUG, "connection with node succesful")
 		},
 	}
 

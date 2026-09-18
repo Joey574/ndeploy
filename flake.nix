@@ -18,7 +18,7 @@
         src = ./.;
 
         proxyVendor = true;
-        vendorHash = "sha256-B4/tJ92LextkNX8Y4hLvNI5IFufx92yweoB1zQlJnIk=";
+        vendorHash = "sha256-1ciYjswpB9ioFi14GCZJQWg6ncy82NZogDLDHnPq3W8=";
         #vendorHash = lib.fakeHash;
 
         nativeBuildInputs = with pkgs; [
