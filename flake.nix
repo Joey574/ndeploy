@@ -18,7 +18,7 @@
         src = ./.;
 
         proxyVendor = true;
-        vendorHash = "sha256-BSn6TULnwrjX3y0kXhf2QumXPzWXgn9cJrG0sEChEhY=";
+        vendorHash = "sha256-B4/tJ92LextkNX8Y4hLvNI5IFufx92yweoB1zQlJnIk=";
         #vendorHash = lib.fakeHash;
 
         nativeBuildInputs = with pkgs; [
@@ -41,7 +41,7 @@
 
       desktopItems = [
         (pkgs.makeDesktopItem {
-          name = "ndeploy"
+          name = "ndeploy";
           desktopName = "ndeploy";
           genericName = "NixOS Fleet Manager";
           commnet = "Deploy and manage a fleet of NixOS nodes";
