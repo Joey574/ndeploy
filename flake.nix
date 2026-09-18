@@ -23,6 +23,7 @@
 
         nativeBuildInputs = with pkgs; [
           pkg-config
+          copyDesktopItems
         ];
 
         buildInputs = with pkgs; [
@@ -37,28 +38,28 @@
           wayland-protocols
           libxkbcommon
         ];
+
+        desktopItems = [
+          (pkgs.makeDesktopItem {
+            name = "ndeploy";
+            desktopName = "ndeploy";
+            genericName = "NixOS Fleet Manager";
+            comment = "Deploy and manage a fleet of NixOS nodes";
+            exec = "ndeploy";
+            icon = "ndeploy";
+            categories = [ "System" "Utility" ];
+            startupWMClass = "ndeploy";
+            terminal = false;
+          })
+        ];
+
+        postInstall = ''
+          install -Dm644 assets/icon.svg \
+              $out/share/icons/hicolor/scalable/apps/ndeploy.svg
+        '';
+
+        meta.mainProgram = "ndeploy";
       };
-
-      desktopItems = [
-        (pkgs.makeDesktopItem {
-          name = "ndeploy";
-          desktopName = "ndeploy";
-          genericName = "NixOS Fleet Manager";
-          commnet = "Deploy and manage a fleet of NixOS nodes";
-          exec = "ndeploy";
-          icon = "ndeploy";
-          categories = [ "System" "Utility" ];
-          startupWMClass = "ndeploy";
-          terminal = "false";
-        })
-      ];
-
-      postInstall = ''
-        install -Dm644 assets/icon.svg \
-            $out/share/icons/hicolor/scalable/apps/ndeploy.svg
-      '';
-
-      meta.mainProgram = "ndeploy";
 
       checks.${system}.fleet-test = pkgs.testers.runNixOSTest {
         name = "ndeploy-test";
@@ -81,6 +82,9 @@
           controller.wait_for_unit("multi-user.target")
           controller.wait_for_unit("display-manager.service")
           controller.sleep(3)
+
+          controller.succeed("test -f /run/current-system/sw/share/applications/ndeploy.desktop")
+          controller.succeed("test -f /run/current-system/sw/share/icons/hicolor/256x256/apps/ndeploy.png")
         '';
       };
     };

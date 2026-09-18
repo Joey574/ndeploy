@@ -11,12 +11,26 @@ type Engine struct {
 	sink sink.Sink
 }
 
-func NewEngine() *Engine {
-	return &Engine{}
+func NewEngine(options ...func(*Engine)) *Engine {
+	e := &Engine{}
+
+	for _, o := range options {
+		o(e)
+	}
+
+	return e
 }
 
 func (e *Engine) TestConnection(n *db.Node) error {
-	client, err := ssh.NewClient(n.User, n.Host, ssh.SetSink(e.sink))
+	client, err := ssh.NewClient(
+		n.User,
+		n.Host,
+		ssh.SetSink(
+			sink.New(
+				sink.Wrap(e.sink),
+			),
+		),
+	)
 	if err != nil {
 		return err
 	}

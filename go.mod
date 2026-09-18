@@ -4,7 +4,7 @@ go 1.26.5
 
 require (
 	fyne.io/fyne/v2 v2.8.0
-	github.com/Joey574/sink/v2 v2.0.0-20260918182136-fc6ec7329f32
+	github.com/Joey574/sink/v2 v2.0.0-20260918190941-afec6d39b800
 	github.com/jessevdk/go-flags v1.6.1
 	golang.org/x/crypto v0.54.0
 	modernc.org/sqlite v1.55.0

@@ -5,6 +5,7 @@ import (
 	"ndeploy/v2/internal/cli"
 	"ndeploy/v2/internal/dbu"
 	"ndeploy/v2/internal/engine"
+	"os"
 	"path/filepath"
 
 	"fyne.io/fyne/v2"
@@ -36,22 +37,29 @@ type App struct {
 }
 
 func NewApp(args *cli.Args, options ...func(*App)) (*App, error) {
+	rb := rb.New(16 * 1024 * 1024) // 16MB ring buffer
+	s := sink.New(
+		sink.PushSinks(rb, os.Stdout),
+		sink.SetLogLevel(sink.TRACE),
+		sink.SetFormat(`[\d] [\t] \s: *`),
+		sink.SetName("main"),
+		sink.ThreadSafe(),
+	)
+
 	a := &App{
 		Fyne:      app.NewWithID("ndeploy"),
 		windows:   make(map[string]fyne.Window),
 		factories: make(map[string]WindowFactory),
 
-		Engine:     engine.NewEngine(),
-		RingBuffer: rb.New(16 * 1024 * 1024), // 16MB ring buffer
-		Sink: sink.New(
-			sink.EnableStdOut(),
-			sink.SetLogLevel(sink.TRACE),
-			sink.SetFormat(`[\d] [\t] \s *`),
-			sink.SetName("main"),
-			sink.ThreadSafe(),
+		Sink:       s,
+		RingBuffer: rb,
+		Engine: engine.NewEngine(
+			engine.SetSink(sink.New(
+				sink.Wrap(s),
+				sink.SetName("engine"),
+			)),
 		),
 	}
-	a.Sink.PushSinks(a.RingBuffer)
 
 	// setup workdir
 	dir, err := a.setupWorkDir(args)
@@ -63,9 +71,11 @@ func NewApp(args *cli.Args, options ...func(*App)) (*App, error) {
 	// init dbu
 	a.Dbu = dbu.New(
 		filepath.Join(a.WorkDir, dbName),
-		dbu.InheritSink("dbu", a.Sink),
+		dbu.SetSink(sink.New(
+			sink.Wrap(a.Sink),
+			sink.SetName("dbu"),
+		)),
 	)
-	a.Sink.PushStores(dbu.NewDBStore("test", a.Dbu))
 
 	for _, o := range options {
 		o(a)
@@ -110,6 +120,7 @@ func (a *App) Run(args *cli.Args, schema embed.FS) error {
 	if err := a.Dbu.Connect(); err != nil {
 		return err
 	}
+	a.Sink.PushStores(dbu.NewDBStore("dbstore", a.Dbu))
 
 	a.Fyne.Run()
 	return nil
