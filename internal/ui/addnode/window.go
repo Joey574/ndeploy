@@ -4,7 +4,6 @@ import (
 	"context"
 	"ndeploy/v2/internal/app"
 	"ndeploy/v2/internal/db"
-	"ndeploy/v2/internal/ssh"
 	"ndeploy/v2/internal/ui/ids"
 
 	"fyne.io/fyne/v2"
@@ -34,7 +33,7 @@ func New(a *app.App) (fyne.Window, func()) {
 			a.Sink.Printf(sink.DEBUG, "add node request, user='%s', host='%s'\n", user, host)
 			queries := a.Dbu.Queries()
 
-			_, err := queries.CreateNode(
+			n, err := queries.CreateNode(
 				ctx, db.CreateNodeParams{
 					User: user,
 					Host: host,
@@ -42,29 +41,15 @@ func New(a *app.App) (fyne.Window, func()) {
 			)
 
 			if err != nil {
-				a.Sink.Printf(sink.ERROR, "add node db error: %v\n", err)
+				a.Sink.Printf(sink.ERROR, "create node failed: %v\n", err)
 				return
 			}
-
-			// at this point any error is considered
-			// non-"fatal" and we should close cleanly
 			defer w.Close()
 
-			// run an initial test connection with the node
-			client, err := ssh.NewClient(user, host, ssh.SetSink(a.Sink))
-			if err != nil {
-				a.Sink.Printf(sink.ERROR, "new ssh client: %v\n", err)
-				return
-			}
-			defer client.Close()
-
-			c, err := client.Dial()
-			if err != nil {
-				a.Sink.Printf(sink.ERROR, "ssh dial: %v\n", err)
-				return
+			if err := a.Engine.TestConnection(&n); err != nil {
+				a.Sink.Printf(sink.WARN, "test connection failed: %v\n", err)
 			}
 
-			c.Close()
 			a.Sink.Println(sink.DEBUG, "connection with node succesful")
 		},
 	}

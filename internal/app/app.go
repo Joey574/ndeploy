@@ -4,6 +4,7 @@ import (
 	"embed"
 	"ndeploy/v2/internal/cli"
 	"ndeploy/v2/internal/dbu"
+	"ndeploy/v2/internal/engine"
 	"path/filepath"
 
 	"fyne.io/fyne/v2"
@@ -16,6 +17,11 @@ const dbName = "sqlite.db"
 
 type WindowFactory func(a *App) (fyne.Window, func())
 
+type Window interface {
+	fyne.Window
+	Close()
+}
+
 type App struct {
 	Fyne      fyne.App
 	windows   map[string]fyne.Window
@@ -23,7 +29,8 @@ type App struct {
 
 	WorkDir string
 
-	Sink       *sink.Sink
+	Engine     *engine.Engine
+	Sink       sink.Sink
 	Dbu        *dbu.Dbu
 	RingBuffer *rb.RingBuffer
 }
@@ -34,11 +41,13 @@ func NewApp(args *cli.Args, options ...func(*App)) (*App, error) {
 		windows:   make(map[string]fyne.Window),
 		factories: make(map[string]WindowFactory),
 
+		Engine:     engine.NewEngine(),
 		RingBuffer: rb.New(16 * 1024 * 1024), // 16MB ring buffer
 		Sink: sink.New(
 			sink.EnableStdOut(),
 			sink.SetLogLevel(sink.TRACE),
 			sink.SetFormat(`[\d] [\t] *`),
+			sink.ThreadSafe(),
 		),
 	}
 	a.Sink.PushSinks(a.RingBuffer)
@@ -87,6 +96,7 @@ func (a *App) OpenOrFocus(id string) fyne.Window {
 			cleanup()
 		}
 	})
+
 	w.Show()
 	return w
 }

@@ -14,7 +14,7 @@ import (
 
 type Dbu struct {
 	path string
-	sink *sink.Sink
+	sink sink.Sink
 	db   *sql.DB
 }
 

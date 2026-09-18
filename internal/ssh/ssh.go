@@ -13,7 +13,7 @@ type Client struct {
 	host      string
 	agentConn net.Conn
 
-	sink   *sink.Sink
+	sink   sink.Sink
 	config *ssh.ClientConfig
 }
 
