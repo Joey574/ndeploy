@@ -8,6 +8,8 @@ github.com/Joey574/sink/v2 v2.0.0-20260916000329-8fe7639b7c99 h1:Oq3weos8T7rmb2Y
 github.com/Joey574/sink/v2 v2.0.0-20260916000329-8fe7639b7c99/go.mod h1:z3nFKP6OQTVpYxwkKONc+RjY1bSLZ6hLkQbsUs2jIvU=
 github.com/Joey574/sink/v2 v2.0.0-20260918175912-b3cf58dc8971 h1:82lKDW4y5k+s6BWXeRzxKvOrB4YgL53aAq5tIqpv5Sc=
 github.com/Joey574/sink/v2 v2.0.0-20260918175912-b3cf58dc8971/go.mod h1:z3nFKP6OQTVpYxwkKONc+RjY1bSLZ6hLkQbsUs2jIvU=
+github.com/Joey574/sink/v2 v2.0.0-20260918182136-fc6ec7329f32 h1:2W5oY78DiqzWrKRMV/tBSXHZGZnCKVC0nItw1NS22Ug=
+github.com/Joey574/sink/v2 v2.0.0-20260918182136-fc6ec7329f32/go.mod h1:z3nFKP6OQTVpYxwkKONc+RjY1bSLZ6hLkQbsUs2jIvU=
 github.com/anthonynsimon/bild v0.14.0 h1:IFRkmKdNdqmexXHfEU7rPlAmdUZ8BDZEGtGHDnGWync=
 github.com/anthonynsimon/bild v0.14.0/go.mod h1:hcvEAyBjTW69qkKJTfpcDQ83sSZHxwOunsseDfeQhUs=
 github.com/clipperhouse/uax29/v2 v2.2.0 h1:ChwIKnQN3kcZteTXMgb1wztSgaU+ZemkgWdohwgs8tY=

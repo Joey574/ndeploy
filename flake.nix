@@ -18,7 +18,7 @@
         src = ./.;
 
         proxyVendor = true;
-        vendorHash = "sha256-m4ZbEdYR5MNrpgbZqneiEKZYhGjiVIe8/Ta0CmfsprQ=";
+        vendorHash = "sha256-BSn6TULnwrjX3y0kXhf2QumXPzWXgn9cJrG0sEChEhY=";
         #vendorHash = lib.fakeHash;
 
         nativeBuildInputs = with pkgs; [
@@ -38,6 +38,20 @@
           libxkbcommon
         ];
       };
+
+      desktopItems = [
+        (pkgs.makeDesktopItem {
+          name = "ndeploy"
+          desktopName = "ndeploy";
+          genericName = "NixOS Fleet Manager";
+          commnet = "Deploy and manage a fleet of NixOS nodes";
+          exec = "ndeploy";
+          icon = "ndeploy";
+          categories = [ "System" "Utility" ];
+          startupWMClass = "ndeploy";
+          terminal = "false";
+        })
+      ];
 
       checks.${system}.fleet-test = pkgs.testers.runNixOSTest {
         name = "ndeploy-test";

@@ -46,7 +46,8 @@ func NewApp(args *cli.Args, options ...func(*App)) (*App, error) {
 		Sink: sink.New(
 			sink.EnableStdOut(),
 			sink.SetLogLevel(sink.TRACE),
-			sink.SetFormat(`[\d] [\t] *`),
+			sink.SetFormat(`[\d] [\t] \s *`),
+			sink.SetName("main"),
 			sink.ThreadSafe(),
 		),
 	}
@@ -62,7 +63,7 @@ func NewApp(args *cli.Args, options ...func(*App)) (*App, error) {
 	// init dbu
 	a.Dbu = dbu.New(
 		filepath.Join(a.WorkDir, dbName),
-		dbu.SetSink(a.Sink),
+		dbu.InheritSink("dbu", a.Sink),
 	)
 	a.Sink.PushStores(dbu.NewDBStore("test", a.Dbu))
 
