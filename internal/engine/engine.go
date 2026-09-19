@@ -25,12 +25,12 @@ func (e *Engine) TestConnection(n *db.Node) error {
 	client, err := ssh.NewClient(
 		n.User,
 		n.Host,
-		ssh.SetSink(
-			sink.New(
-				sink.Wrap(e.sink),
-			),
-		),
+		ssh.SetSink(sink.New(
+			sink.Wrap(e.sink),
+			sink.SetName("ssh"),
+		)),
 	)
+
 	if err != nil {
 		return err
 	}
@@ -43,4 +43,8 @@ func (e *Engine) TestConnection(n *db.Node) error {
 
 	c.Close()
 	return nil
+}
+
+func (e *Engine) ProbeHost() {
+
 }

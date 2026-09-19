@@ -1,7 +1,8 @@
 package ssh
 
 import (
-	"fmt"
+	"context"
+	"errors"
 	"net"
 
 	"github.com/Joey574/sink/v2/pkg/sink"
@@ -46,25 +47,7 @@ func NewClient(user, host string, options ...func(*Client)) (*Client, error) {
 }
 
 func (c *Client) Dial() (*ssh.Client, error) {
-	return ssh.Dial("tcp", c.host+":22", c.config)
-}
-
-func Dial(user, host string) (*ssh.Session, error) {
-	config := &ssh.ClientConfig{
-		User: user,
-		Auth: []ssh.AuthMethod{
-			ssh.PublicKeys(nil),
-		},
-
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-	}
-
-	client, err := ssh.Dial("tcp", fmt.Sprintf("%s:22", host), config)
-	if err != nil {
-		return nil, err
-	}
-
-	return client.NewSession()
+	return ssh.Dial("tcp", net.JoinHostPort(c.host, "22"), c.config)
 }
 
 func (c *Client) Close() error {
@@ -73,4 +56,29 @@ func (c *Client) Close() error {
 	}
 
 	return nil
+}
+
+func FetchHostKey(ctx context.Context, host string) (ssh.PublicKey, error) {
+	var key ssh.PublicKey
+	cfg := &ssh.ClientConfig{
+		User: "probe",
+		HostKeyCallback: func(_ string, _ net.Addr, k ssh.PublicKey) error {
+			key = k
+			return errors.New("probe complete")
+		},
+	}
+
+	var d net.Dialer
+	conn, err := d.DialContext(ctx, "tcp", net.JoinHostPort(host, "22"))
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	_, _, _, err = ssh.NewClientConn(conn, host, cfg)
+	if key == nil {
+		return nil, err
+	}
+
+	return key, nil
 }

@@ -21,30 +21,39 @@ func (q *Queries) CountNodes(ctx context.Context) (int64, error) {
 }
 
 const createNode = `-- name: CreateNode :one
-INSERT INTO nodes (user, host)
-VALUES (?, ?)
-RETURNING id, user, host, created_at
+INSERT INTO nodes (user, host, host_key, identity_file)
+VALUES (?, ?, ?, ?)
+RETURNING id, user, host, host_key, identity_file, created_at
 `
 
 type CreateNodeParams struct {
-	User string `json:"user"`
-	Host string `json:"host"`
+	User         string `json:"user"`
+	Host         string `json:"host"`
+	HostKey      string `json:"host_key"`
+	IdentityFile string `json:"identity_file"`
 }
 
 func (q *Queries) CreateNode(ctx context.Context, arg CreateNodeParams) (Node, error) {
-	row := q.db.QueryRowContext(ctx, createNode, arg.User, arg.Host)
+	row := q.db.QueryRowContext(ctx, createNode,
+		arg.User,
+		arg.Host,
+		arg.HostKey,
+		arg.IdentityFile,
+	)
 	var i Node
 	err := row.Scan(
 		&i.ID,
 		&i.User,
 		&i.Host,
+		&i.HostKey,
+		&i.IdentityFile,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getNode = `-- name: GetNode :one
-SELECT id, user, host, created_at FROM nodes WHERE id = ?
+SELECT id, user, host, host_key, identity_file, created_at FROM nodes WHERE id = ?
 `
 
 func (q *Queries) GetNode(ctx context.Context, id int64) (Node, error) {
@@ -54,13 +63,15 @@ func (q *Queries) GetNode(ctx context.Context, id int64) (Node, error) {
 		&i.ID,
 		&i.User,
 		&i.Host,
+		&i.HostKey,
+		&i.IdentityFile,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const listNodes = `-- name: ListNodes :many
-SELECT id, user, host, created_at FROM nodes ORDER BY id
+SELECT id, user, host, host_key, identity_file, created_at FROM nodes ORDER BY id
 `
 
 func (q *Queries) ListNodes(ctx context.Context) ([]Node, error) {
@@ -76,6 +87,8 @@ func (q *Queries) ListNodes(ctx context.Context) ([]Node, error) {
 			&i.ID,
 			&i.User,
 			&i.Host,
+			&i.HostKey,
+			&i.IdentityFile,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err

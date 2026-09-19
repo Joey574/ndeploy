@@ -1,6 +1,6 @@
 -- name: CreateNode :one
-INSERT INTO nodes (user, host)
-VALUES (?, ?)
+INSERT INTO nodes (user, host, host_key, identity_file)
+VALUES (?, ?, ?, ?)
 RETURNING *;
 
 -- name: GetNode :one

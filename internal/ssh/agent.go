@@ -1,12 +1,15 @@
 package ssh
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"os"
 
 	"golang.org/x/crypto/ssh/agent"
 )
+
+var ErrNoAgent = errors.New("SSH_AUTH_SOCK env variable not set")
 
 func connectToAgent() (agent.ExtendedAgent, net.Conn, error) {
 	socketPath := os.Getenv("SSH_AUTH_SOCK")

@@ -13,19 +13,20 @@ import (
 
 func New(a *app.App) (fyne.Window, func()) {
 	w := a.Fyne.NewWindow(ids.AddNodeID)
-	w.Resize(fyne.NewSize(100, 200))
+	w.Resize(fyne.NewSize(250, 150))
 
 	userEntry := widget.NewEntry()
-	userEntry.SetPlaceHolder("remote user ex admin")
+	userEntry.SetPlaceHolder("remote user ex: admin")
 
 	hostEntry := widget.NewEntry()
-	hostEntry.SetPlaceHolder("remote host ex 192.168.1.10")
+	hostEntry.SetPlaceHolder("remote host ex: 192.168.1.10")
 
 	form := &widget.Form{
 		Items: []*widget.FormItem{
 			{Text: "user", Widget: userEntry},
 			{Text: "host", Widget: hostEntry},
 		},
+
 		OnSubmit: func() {
 			ctx := context.Background()
 			user := userEntry.Text
@@ -37,8 +38,8 @@ func New(a *app.App) (fyne.Window, func()) {
 			)
 
 			snk.Printf(sink.DEBUG, "add node request, user='%s', host='%s'\n", user, host)
-			queries := a.Dbu.Queries()
 
+			queries := a.Dbu.Queries()
 			n, err := queries.CreateNode(
 				ctx, db.CreateNodeParams{
 					User: user,

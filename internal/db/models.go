@@ -19,8 +19,10 @@ type Log struct {
 }
 
 type Node struct {
-	ID        int64     `json:"id"`
-	User      string    `json:"user"`
-	Host      string    `json:"host"`
-	CreatedAt time.Time `json:"created_at"`
+	ID           int64     `json:"id"`
+	User         string    `json:"user"`
+	Host         string    `json:"host"`
+	HostKey      string    `json:"host_key"`
+	IdentityFile string    `json:"identity_file"`
+	CreatedAt    time.Time `json:"created_at"`
 }
