@@ -72,7 +72,7 @@ func checkKnownHosts(hostname string, remote net.Addr, key ssh.PublicKey) KnownH
 		return KnownHostsUnknown
 	}
 
-	callback, err := knownhosts.New(filepath.Join(".ssh", "known_hosts"))
+	callback, err := knownhosts.New(filepath.Join(home, ".ssh", "known_hosts"))
 	if err != nil {
 		return KnownHostsUnknown
 	}

@@ -1,11 +1,16 @@
 package ssh
 
 import (
+	"bytes"
+	"crypto/x509"
 	"errors"
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -133,14 +138,199 @@ func DiscoverIdentities() ([]Identity, error) {
 	return identities, nil
 }
 
-func readKeyFile(path string) ([]byte, error) {}
+func readKeyFile(path string) ([]byte, error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
 
-func InspectIdentity(path string) (Identity, error) {}
+	if info.Size() > maxKeyFileSize {
+		return nil, fmt.Errorf("%s is too large to be a private key", path)
+	}
 
-func inspect(path string) (Identity, ssh.PublicKey, error) {}
+	return os.ReadFile(path)
+}
 
-func publicKeyOf(path string, pem []byte) (pub ssh.PublicKey, encrypted bool, error) {}
+func InspectIdentity(path string) (Identity, error) {
+	identity, _, err := inspect(path)
+	return identity, err
+}
 
-func commentOf(path string) string {}
+func inspect(path string) (Identity, ssh.PublicKey, error) {
+	identity := Identity{Path: path}
 
-func LoadSigner(path string, prompt PassphrasePrompt) (ssh.Signer, error) {}
+	pem, err := readKeyFile(path)
+	if err != nil {
+		return identity, nil, err
+	}
+
+	if !bytes.Contains(pem, []byte("PRIVATE KEY-----")) {
+		return identity, nil, fmt.Errorf("%s is not a private key", path)
+	}
+
+	pub, encrypted, err := publicKeyOf(path, pem)
+	if err != nil {
+		return identity, nil, err
+	}
+
+	identity.Encrypted = encrypted
+	identity.Comment = commentOf(path)
+	if pub != nil {
+		identity.Fingerprint = Fingerprint(pub)
+	}
+
+	return identity, pub, nil
+}
+
+func publicKeyOf(path string, pem []byte) (ssh.PublicKey, bool, error) {
+	signer, err := ssh.ParsePrivateKey(pem)
+	if err == nil {
+		return signer.PublicKey(), false, nil
+	}
+
+	var missing *ssh.PassphraseMissingError
+	if !errors.As(err, &missing) {
+		return nil, false, err
+	}
+
+	if missing.PublicKey != nil {
+		return missing.PublicKey, true, nil
+	}
+
+	if line, err := os.ReadFile(path + ".pub"); err == nil {
+		if pub, _, _, _, err := ssh.ParseAuthorizedKey(line); err == nil {
+			return pub, true, nil
+		}
+	}
+
+	return nil, true, nil
+}
+
+func commentOf(path string) string {
+	line, err := os.ReadFile(path + ".pub")
+	if err != nil {
+		return ""
+	}
+
+	_, comment, _, _, err := ssh.ParseAuthorizedKey(line)
+	if err != nil {
+		return ""
+	}
+
+	return comment
+}
+
+func LoadSigner(path string, prompt PassphrasePrompt) (ssh.Signer, error) {
+	pem, err := readKeyFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	signer, err := ssh.ParsePrivateKey(pem)
+
+	var missing *ssh.PassphraseMissingError
+	if !errors.As(err, &missing) {
+		return signer, err
+	}
+
+	if prompt == nil {
+		return nil, ErrNoPrompt
+	}
+
+	fingerprint := ""
+	if pub, _, _ := publicKeyOf(path, pem); pub != nil {
+		fingerprint = Fingerprint(pub)
+	}
+
+	for attempt := 1; attempt <= maxPassphraseAttempts; attempt++ {
+		passphrase, err := prompt(path, fingerprint, attempt)
+		if err != nil {
+			return nil, err
+		}
+
+		signer, err := ssh.ParsePrivateKeyWithPassphrase(pem, passphrase)
+		clear(passphrase)
+
+		if errors.Is(err, x509.IncorrectPasswordError) {
+			continue
+		}
+
+		return signer, err
+	}
+
+	return nil, ErrTooManyAttempts
+}
+
+type SignerCache struct {
+	mx      sync.Mutex
+	signers map[string]ssh.Signer
+}
+
+func NewSignerCache() *SignerCache {
+	return &SignerCache{signers: make(map[string]ssh.Signer)}
+}
+
+func (c *SignerCache) Get(path string) (ssh.Signer, bool) {
+	c.mx.Lock()
+	defer c.mx.Unlock()
+
+	signer, ok := c.signers[path]
+	return signer, ok
+}
+
+func (c *SignerCache) Put(path string, signer ssh.Signer) {
+	c.mx.Lock()
+	defer c.mx.Unlock()
+
+	c.signers[path] = signer
+}
+
+func (c *SignerCache) Forget(path string) {
+	c.mx.Lock()
+	defer c.mx.Unlock()
+
+	delete(c.signers, path)
+}
+
+type lazySigner struct {
+	pub  ssh.PublicKey
+	load func() (ssh.Signer, error)
+
+	once   sync.Once
+	signer ssh.Signer
+	err    error
+}
+
+func (l *lazySigner) resolve() (ssh.Signer, error) {
+	l.once.Do(func() {
+		l.signer, l.err = l.load()
+	})
+
+	return l.signer, l.err
+}
+
+func (l *lazySigner) PublicKey() ssh.PublicKey {
+	return l.pub
+}
+
+func (l *lazySigner) Sign(rand io.Reader, data []byte) (*ssh.Signature, error) {
+	signer, err := l.resolve()
+	if err != nil {
+		return nil, err
+	}
+
+	return signer.Sign(rand, data)
+}
+
+func (l *lazySigner) SignWithAlgorithm(rand io.Reader, data []byte, algorithm string) (*ssh.Signature, error) {
+	signer, err := l.resolve()
+	if err != nil {
+		return nil, err
+	}
+
+	if as, ok := signer.(ssh.AlgorithmSigner); ok {
+		return as.SignWithAlgorithm(rand, data, algorithm)
+	}
+
+	return signer.Sign(rand, data)
+}
