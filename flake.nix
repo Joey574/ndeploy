@@ -5,7 +5,8 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   };
 
-  outputs = { self, nixpkgs, ... }:
+  outputs =
+    { self, nixpkgs, ... }:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs { inherit system; };
@@ -47,7 +48,10 @@
             comment = "Deploy and manage a fleet of NixOS nodes";
             exec = "ndeploy";
             icon = "ndeploy";
-            categories = [ "System" "Utility" ];
+            categories = [
+              "System"
+              "Utility"
+            ];
             startupWMClass = "ndeploy";
             terminal = false;
           })
@@ -65,7 +69,7 @@
         name = "ndeploy-test";
 
         nodes = {
-          controller = {pkgs, ... }: {
+          controller = { pkgs, ... }: {
             imports = [ ./modules/controller/configuration.nix ];
             environment.systemPackages = [ self.packages.${system}.ndeploy ];
             _module.args.ndeploy = self.packages.${system}.ndeploy;

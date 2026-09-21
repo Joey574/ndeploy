@@ -20,7 +20,10 @@
     bantime = "30s";
   };
 
-  nix.settings.trusted-users = [ "root" "admin" ];
+  nix.settings.trusted-users = [
+    "root"
+    "admin"
+  ];
 
   users.users.admin = {
     isNormalUser = true;

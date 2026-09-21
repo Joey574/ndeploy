@@ -11,7 +11,11 @@
   users.users.controller = {
     isNormalUser = true;
     password = "";
-    extraGroups = [ "video" "input" "wheel" ];
+    extraGroups = [
+      "video"
+      "input"
+      "wheel"
+    ];
   };
 
   systemd.tmpfiles.rules = [
@@ -45,6 +49,9 @@
     };
   };
 
-  environment.systemPackages = with pkgs; [ mesa ndeploy ];
+  environment.systemPackages = with pkgs; [
+    mesa
+    ndeploy
+  ];
   system.stateVersion = "26.05";
 }
