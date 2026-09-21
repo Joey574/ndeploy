@@ -3,6 +3,6 @@ CREATE TABLE nodes (
     user TEXT NOT NULL,
     host TEXT NOT NULL UNIQUE,
     host_key TEXT NOT NULL,
-    identity_file TEXT NOT NULL,
+    identity_file TEXT NOT NULL DEFAULT '',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

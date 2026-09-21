@@ -1,6 +1,8 @@
 package engine
 
 import (
+	"context"
+	"fmt"
 	"ndeploy/v2/internal/db"
 	"ndeploy/v2/internal/ssh"
 
@@ -8,11 +10,15 @@ import (
 )
 
 type Engine struct {
-	sink sink.Sink
+	sink    sink.Sink
+	signers *ssh.SignerCache
 }
 
 func NewEngine(options ...func(*Engine)) *Engine {
-	e := &Engine{}
+	e := &Engine{
+		sink:    sink.New(),
+		signers: ssh.NewSignerCache(),
+	}
 
 	for _, o := range options {
 		o(e)
@@ -21,30 +27,50 @@ func NewEngine(options ...func(*Engine)) *Engine {
 	return e
 }
 
-func (e *Engine) TestConnection(n *db.Node) error {
-	client, err := ssh.NewClient(
-		n.User,
-		n.Host,
-		ssh.SetSink(sink.New(
-			sink.Wrap(e.sink),
-			sink.SetName("ssh"),
-		)),
-	)
+func (e *Engine) ProbeHost(ctx context.Context, host string) (*ssh.HostKeyInfo, error) {
+	e.sink.Printf(sink.DEBUG, "probing host key of %s\n", host)
 
+	info, err := ssh.FetchHostKey(ctx, host)
+	if err != nil {
+		e.sink.Printf(sink.WARN, "probing %s failed: %v\n", host)
+		return nil, err
+	}
+
+	e.sink.Printf(sink.DEBUG, "%s presented %s %s\n", host, info.Key.Type(), ssh.Fingerprint(info.Key))
+	return info, nil
+}
+
+func (e *Engine) TestConnection(ctx context.Context, n *db.Node, prompt ssh.PassphrasePrompt) error {
+	client, err := e.newClient(n, prompt)
 	if err != nil {
 		return err
 	}
 	defer client.Close()
 
-	c, err := client.Dial()
+	conn, err := client.Dial(ctx)
 	if err != nil {
 		return err
 	}
 
-	c.Close()
-	return nil
+	return conn.Close()
 }
 
-func (e *Engine) ProbeHost() {
+func (e *Engine) newClient(n *db.Node, prompt ssh.PassphrasePrompt) (*ssh.Client, error) {
+	hostKey, err := ssh.ParseHostKey(n.HostKey)
+	if err != nil {
+		return nil, fmt.Errorf("stored host key of %s is invalid: %w", n.Host, err)
+	}
 
+	return ssh.NewClient(
+		n.User,
+		n.Host,
+		ssh.SetHostKey(hostKey),
+		ssh.SetIdentityFile(n.IdentityFile),
+		ssh.SetPassphrasePrompt(prompt),
+		ssh.SetSignerCache(e.signers),
+		ssh.SetSink(sink.New(
+			sink.Wrap(e.sink),
+			sink.SetName(fmt.Sprintf("ssh-%s", n.Host)),
+		)),
+	)
 }

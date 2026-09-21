@@ -9,11 +9,12 @@ import (
 	"ndeploy/v2/internal/db"
 	"ndeploy/v2/internal/ssh"
 	"ndeploy/v2/internal/ui/ids"
+	"ndeploy/v2/internal/ui/prompts"
 	"strings"
 
-	"fyne.io/fyne/dialog"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/widget"
 	"github.com/Joey574/sink/v2/pkg/sink"
@@ -71,7 +72,7 @@ func New(a *app.App) (fyne.Window, func()) {
 	f.status = widget.NewLabel(f.agentSummary())
 	f.status.Wrapping = fyne.TextWrapWord
 
-	f.submit = widget.NewLabel(f.agentSummary())
+	f.submit = widget.NewButton("Add node", f.onSubmit)
 	f.submit.Importance = widget.HighImportance
 
 	w.SetContent(container.NewBorder(

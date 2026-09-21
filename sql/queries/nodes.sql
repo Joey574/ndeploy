@@ -11,3 +11,12 @@ SELECT * FROM nodes ORDER BY id;
 
 -- name: CountNodes :one
 SELECT COUNT(DISTINCT host) FROM nodes;
+
+-- name: UpdateNodeHostKey :exec
+UPDATE nodes SET host_key = ? WHERE id = ?;
+
+-- name: UpdateNodeIdentityFile :exec
+UPDATE nodes SET identity_file = ? WHERE id = ?;
+
+-- name: GetNodeByHost :one
+SELECT * FROM nodes WHERE host = ?;

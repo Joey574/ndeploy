@@ -70,6 +70,24 @@ func (q *Queries) GetNode(ctx context.Context, id int64) (Node, error) {
 	return i, err
 }
 
+const getNodeByHost = `-- name: GetNodeByHost :one
+SELECT id, user, host, host_key, identity_file, created_at FROM nodes WHERE host = ?
+`
+
+func (q *Queries) GetNodeByHost(ctx context.Context, host string) (Node, error) {
+	row := q.db.QueryRowContext(ctx, getNodeByHost, host)
+	var i Node
+	err := row.Scan(
+		&i.ID,
+		&i.User,
+		&i.Host,
+		&i.HostKey,
+		&i.IdentityFile,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const listNodes = `-- name: ListNodes :many
 SELECT id, user, host, host_key, identity_file, created_at FROM nodes ORDER BY id
 `
@@ -102,4 +120,32 @@ func (q *Queries) ListNodes(ctx context.Context) ([]Node, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateNodeHostKey = `-- name: UpdateNodeHostKey :exec
+UPDATE nodes SET host_key = ? WHERE id = ?
+`
+
+type UpdateNodeHostKeyParams struct {
+	HostKey string `json:"host_key"`
+	ID      int64  `json:"id"`
+}
+
+func (q *Queries) UpdateNodeHostKey(ctx context.Context, arg UpdateNodeHostKeyParams) error {
+	_, err := q.db.ExecContext(ctx, updateNodeHostKey, arg.HostKey, arg.ID)
+	return err
+}
+
+const updateNodeIdentityFile = `-- name: UpdateNodeIdentityFile :exec
+UPDATE nodes SET identity_file = ? WHERE id = ?
+`
+
+type UpdateNodeIdentityFileParams struct {
+	IdentityFile string `json:"identity_file"`
+	ID           int64  `json:"id"`
+}
+
+func (q *Queries) UpdateNodeIdentityFile(ctx context.Context, arg UpdateNodeIdentityFileParams) error {
+	_, err := q.db.ExecContext(ctx, updateNodeIdentityFile, arg.IdentityFile, arg.ID)
+	return err
 }

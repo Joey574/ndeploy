@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"ndeploy/v2/internal/ssh"
 	"path/filepath"
+	"strings"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 )
@@ -56,6 +58,40 @@ func ConfirmHostKey(w fyne.Window, host string, info *ssh.HostKeyInfo) bool {
 	answers := make(chan bool, 1)
 
 	fyne.Do(func() {
+		keyType := strings.ToUpper(strings.TrimPrefix(info.Key.Type(), "ssh-"))
 
+		intro := fmt.Sprintf("ndeploy has not connected to %s before.", host)
+		if info.KnownHosts == ssh.KnownHostsMismatch {
+			intro = fmt.Sprintf("WARNING: %s presented a different key than the one in your ~/.ssh/known_hosts. Unless the node was reinstalled, someone may be intercepting the connection.", host)
+		}
+
+		introLabel := widget.NewLabel(intro)
+		introLabel.Wrapping = fyne.TextWrapWord
+
+		fingerprint := widget.NewLabelWithStyle(
+			fmt.Sprintf("%s key fingerprint:\n%s", keyType, ssh.Fingerprint(info.Key)),
+			fyne.TextAlignLeading,
+			fyne.TextStyle{Monospace: true},
+		)
+
+		help := widget.NewLabel(fmt.Sprintf("To verify, run this on the node and compare the output:\nssh-keygen -lf /etc/ssh/ssh_host_%s_key.pub", strings.ToLower(keyType)))
+		help.Wrapping = fyne.TextWrapWord
+
+		d := dialog.NewCustomConfirm(
+			"Trust this host?", "Trust", "Cancel",
+			container.NewVBox(introLabel, fingerprint, help),
+			func(ok bool) { answers <- ok }, w,
+		)
+
+		d.Resize(fyne.NewSize(520, 0))
+		d.Show()
+	})
+
+	return <-answers
+}
+
+func ShowError(w fyne.Window, err error) {
+	fyne.Do(func() {
+		dialog.ShowError(err, w)
 	})
 }
