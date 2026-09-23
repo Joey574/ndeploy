@@ -16,8 +16,9 @@ import (
 
 const dbName = "sqlite.db"
 
-type WindowFactory func(a *App) (fyne.Window, func())
+type WindowFactory func(*App) (fyne.Window, func())
 
+// TODO
 type Window interface {
 	fyne.Window
 	Close()

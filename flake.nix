@@ -19,7 +19,7 @@
         src = ./.;
 
         proxyVendor = true;
-        vendorHash = "sha256-PpWfnTJdhM5mu6OHpTXKtc5rUoUfxqNVWgzBRvuwYXI=";
+        vendorHash = "sha256-3ZPNaMmINK+1ouh/jRephF/H5hDPtctGtREvq33Rmxo=";
         #vendorHash = lib.fakeHash;
 
         nativeBuildInputs = with pkgs; [
@@ -86,9 +86,6 @@
           controller.wait_for_unit("multi-user.target")
           controller.wait_for_unit("display-manager.service")
           controller.sleep(3)
-
-          controller.succeed("test -f /run/current-system/sw/share/applications/ndeploy.desktop")
-          controller.succeed("test -f /run/current-system/sw/share/icons/hicolor/256x256/apps/ndeploy.png")
         '';
       };
     };

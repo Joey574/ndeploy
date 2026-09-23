@@ -3,6 +3,7 @@ package app
 import (
 	"ndeploy/v2/internal/cli"
 	"os"
+	"path/filepath"
 
 	"github.com/Joey574/sink/v2/pkg/sink"
 )
@@ -17,7 +18,7 @@ func (a *App) setupWorkDir(args *cli.Args) (string, error) {
 			return workDir, err
 		}
 
-		workDir += "/ndeploy"
+		workDir = filepath.Join(workDir, "ndeploy")
 	} else {
 		workDir = args.WorkDir
 	}
