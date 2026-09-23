@@ -32,7 +32,7 @@ func (e *Engine) ProbeHost(ctx context.Context, host string) (*ssh.HostKeyInfo, 
 
 	info, err := ssh.FetchHostKey(ctx, host)
 	if err != nil {
-		e.sink.Printf(sink.WARN, "probing %s failed: %v\n", host)
+		e.sink.Printf(sink.WARN, "probing %s failed: %v\n", host, err)
 		return nil, err
 	}
 
