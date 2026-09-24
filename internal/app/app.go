@@ -16,17 +16,16 @@ import (
 
 const dbName = "sqlite.db"
 
-type WindowFactory func(*App) (fyne.Window, func())
+type WindowFactory func(*App) Window
 
-// TODO
 type Window interface {
-	fyne.Window
-	Close()
+	Window() fyne.Window
+	Close() error
 }
 
 type App struct {
 	Fyne      fyne.App
-	windows   map[string]fyne.Window
+	windows   map[string]Window
 	factories map[string]WindowFactory
 
 	WorkDir string
@@ -49,7 +48,7 @@ func NewApp(args *cli.Args, options ...func(*App)) (*App, error) {
 
 	a := &App{
 		Fyne:      app.NewWithID("ndeploy"),
-		windows:   make(map[string]fyne.Window),
+		windows:   make(map[string]Window),
 		factories: make(map[string]WindowFactory),
 
 		Sink:       s,
@@ -89,9 +88,9 @@ func (a *App) Register(id string, factory WindowFactory) {
 	a.factories[id] = factory
 }
 
-func (a *App) OpenOrFocus(id string) fyne.Window {
+func (a *App) OpenOrFocus(id string) Window {
 	if w, ok := a.windows[id]; ok {
-		w.RequestFocus()
+		w.Window().RequestFocus()
 		return w
 	}
 
@@ -100,16 +99,16 @@ func (a *App) OpenOrFocus(id string) fyne.Window {
 		panic("no window registered for id: " + id)
 	}
 
-	w, cleanup := factory(a)
+	w := factory(a)
 	a.windows[id] = w
-	w.SetOnClosed(func() {
+	w.Window().SetOnClosed(func() {
 		delete(a.windows, id)
-		if cleanup != nil {
-			cleanup()
+		if err := w.Close(); err != nil {
+			a.Sink.Printf(sink.ERROR, "on close: %v\n", err)
 		}
 	})
 
-	w.Show()
+	w.Window().Show()
 	return w
 }
 

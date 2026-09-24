@@ -4,4 +4,5 @@ const (
 	MainWindowID = "main"
 	LogViewerID  = "logviewer"
 	AddNodeID    = "addnode"
+	EditNodeID   = "editnode"
 )
