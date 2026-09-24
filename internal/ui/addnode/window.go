@@ -25,12 +25,13 @@ const (
 	browseLabel    = "Browse..."
 )
 
-type form struct {
+type AddNode struct {
 	a    *app.App
 	w    fyne.Window
 	sink sink.Sink
 
-	ctx context.Context
+	ctx    context.Context
+	cancel context.CancelFunc
 
 	user, host *widget.Entry
 	identity   *widget.Select
@@ -40,16 +41,17 @@ type form struct {
 	identities map[string]string
 }
 
-func New(a *app.App) (fyne.Window, func()) {
+func New(a *app.App) app.Window {
 	w := a.Fyne.NewWindow(ids.AddNodeID)
-	w.Resize(fyne.NewSize(680, 460))
+	w.Resize(fyne.NewSize(680, 360))
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	f := &form{
-		a:   a,
-		w:   w,
-		ctx: ctx,
+	f := &AddNode{
+		a:      a,
+		w:      w,
+		ctx:    ctx,
+		cancel: cancel,
 		sink: sink.New(
 			sink.Wrap(a.Sink),
 			sink.SetName("addnode"),
@@ -86,10 +88,19 @@ func New(a *app.App) (fyne.Window, func()) {
 		),
 	))
 
-	return w, cancel
+	return f
 }
 
-func (f *form) identityOptions() []string {
+func (f *AddNode) Window() fyne.Window {
+	return f.w
+}
+
+func (f *AddNode) Close() error {
+	f.cancel()
+	return nil
+}
+
+func (f *AddNode) identityOptions() []string {
 	options := []string{automaticLabel}
 
 	found, err := ssh.DiscoverIdentities()
@@ -106,7 +117,7 @@ func (f *form) identityOptions() []string {
 	return append(options, browseLabel)
 }
 
-func (f *form) agentSummary() string {
+func (f *AddNode) agentSummary() string {
 	keys, err := ssh.AgentIdentities()
 	if err != nil {
 		return fmt.Sprintf("ssh-agent could not be queried: %v", err)
@@ -119,13 +130,13 @@ func (f *form) agentSummary() string {
 	return fmt.Sprintf("ssh-agent holds %d key(s) that automatic will try first", len(keys))
 }
 
-func (f *form) onIdentityChanged(selected string) {
+func (f *AddNode) onIdentityChanged(selected string) {
 	if selected == browseLabel {
 		f.browseIdentity()
 	}
 }
 
-func (f *form) browseIdentity() {
+func (f *AddNode) browseIdentity() {
 	picker := dialog.NewFileOpen(func(file fyne.URIReadCloser, err error) {
 		if err != nil || file == nil {
 			if err != nil {
@@ -163,7 +174,7 @@ func (f *form) browseIdentity() {
 	picker.Show()
 }
 
-func (f *form) onSubmit() {
+func (f *AddNode) onSubmit() {
 	user := strings.TrimSpace(f.user.Text)
 	host := strings.TrimSpace(f.host.Text)
 	identityFile := f.identities[f.identity.Selected]
@@ -177,7 +188,7 @@ func (f *form) onSubmit() {
 	go f.addNode(user, host, identityFile)
 }
 
-func (f *form) addNode(user, host, identityFile string) {
+func (f *AddNode) addNode(user, host, identityFile string) {
 	defer fyne.Do(func() { f.setBusy(false) })
 
 	f.sink.Printf(sink.DEBUG, "add node request, user='%s', host='%s', identity='%s'\n", user, host, identityFile)
@@ -241,7 +252,7 @@ func (f *form) addNode(user, host, identityFile string) {
 	fyne.Do(f.w.Close)
 }
 
-func (f *form) fail(err error) {
+func (f *AddNode) fail(err error) {
 	if errors.Is(err, context.Canceled) {
 		return
 	}
@@ -251,11 +262,11 @@ func (f *form) fail(err error) {
 	prompts.ShowError(f.w, err)
 }
 
-func (f *form) setStatus(text string) {
+func (f *AddNode) setStatus(text string) {
 	fyne.Do(func() { f.status.SetText(text) })
 }
 
-func (f *form) setBusy(busy bool) {
+func (f *AddNode) setBusy(busy bool) {
 	for _, control := range []fyne.Disableable{f.user, f.host, f.identity, f.submit} {
 		if busy {
 			control.Disable()

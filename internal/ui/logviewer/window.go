@@ -11,7 +11,8 @@ import (
 	"github.com/Joey574/sink/v2/pkg/ds/rb"
 )
 
-type logViewer struct {
+type LogViewer struct {
+	w       fyne.Window
 	rb      *rb.RingBuffer
 	lastVer uint64
 	buf     []byte
@@ -22,26 +23,18 @@ type logViewer struct {
 	stop       chan struct{}
 }
 
-func New(a *app.App) (fyne.Window, func()) {
+func New(a *app.App) app.Window {
 	w := a.Fyne.NewWindow(ids.LogViewerID)
-	lv := newLogViewer(a.RingBuffer)
-	go lv.Run(100 * time.Millisecond)
 
-	w.SetContent(lv.CanvasObject())
-	w.Resize(fyne.NewSize(600, 400))
-
-	return w, func() { lv.Stop() }
-}
-
-func newLogViewer(rb *rb.RingBuffer) *logViewer {
 	rt := widget.NewRichTextWithText("")
 	rt.Wrapping = fyne.TextWrapOff
 
 	sc := container.NewScroll(rt)
 
-	lv := &logViewer{
-		rb:  rb,
-		buf: make([]byte, rb.Capacity()),
+	lv := &LogViewer{
+		w:   w,
+		rb:  a.RingBuffer,
+		buf: make([]byte, a.RingBuffer.Capacity()),
 
 		richText:   rt,
 		scroll:     sc,
@@ -53,14 +46,19 @@ func newLogViewer(rb *rb.RingBuffer) *logViewer {
 		lv.autoScroll = pos.Y+sc.Size().Height >= sc.Content.Size().Height-4
 	}
 
+	go lv.Run(100 * time.Millisecond)
+
+	w.SetContent(lv.CanvasObject())
+	w.Resize(fyne.NewSize(600, 400))
+
 	return lv
 }
 
-func (lv *logViewer) CanvasObject() fyne.CanvasObject {
+func (lv *LogViewer) CanvasObject() fyne.CanvasObject {
 	return lv.scroll
 }
 
-func (lv *logViewer) Run(interval time.Duration) {
+func (lv *LogViewer) Run(interval time.Duration) {
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
@@ -95,6 +93,11 @@ func (lv *logViewer) Run(interval time.Duration) {
 	}
 }
 
-func (lv *logViewer) Stop() {
+func (lv *LogViewer) Close() error {
 	close(lv.stop)
+	return nil
+}
+
+func (lv *LogViewer) Window() fyne.Window {
+	return lv.w
 }
