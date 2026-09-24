@@ -35,9 +35,8 @@
   virtualisation = {
     graphics = true;
     qemu.options = [
-      "-vga none"
-      "-device virtio-vga"
-      "-display std"
+      "-vga virtio"
+      "-display gtk"
       "-device usb-tablet"
     ];
 
