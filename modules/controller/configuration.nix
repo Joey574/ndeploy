@@ -36,8 +36,8 @@
     graphics = true;
     qemu.options = [
       "-vga none"
-      "-device virtio-vga-gl"
-      "-display gtk,gl=on,zoom-to-fit=off"
+      "-device virtio-vga"
+      "-display std"
       "-device usb-tablet"
     ];
 

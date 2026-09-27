@@ -1,3 +1,3 @@
-nix build .#checks.x86_64-linux.fleet-test.driverInteractive
+sudo nix build .#checks.x86_64-linux.fleet-test.driverInteractive
 
 testpass
