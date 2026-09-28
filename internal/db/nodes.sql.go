@@ -23,7 +23,7 @@ func (q *Queries) CountNodes(ctx context.Context) (int64, error) {
 const createNode = `-- name: CreateNode :one
 INSERT INTO nodes (user, host, host_key, identity_file)
 VALUES (?, ?, ?, ?)
-RETURNING id, user, host, host_key, identity_file, created_at
+RETURNING id, user, host, host_key, identity_file, config_file, created_at
 `
 
 type CreateNodeParams struct {
@@ -47,13 +47,23 @@ func (q *Queries) CreateNode(ctx context.Context, arg CreateNodeParams) (Node, e
 		&i.Host,
 		&i.HostKey,
 		&i.IdentityFile,
+		&i.ConfigFile,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
+const deleteNode = `-- name: DeleteNode :exec
+DELETE FROM nodes WHERE id = ?
+`
+
+func (q *Queries) DeleteNode(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteNode, id)
+	return err
+}
+
 const getNode = `-- name: GetNode :one
-SELECT id, user, host, host_key, identity_file, created_at FROM nodes WHERE id = ?
+SELECT id, user, host, host_key, identity_file, config_file, created_at FROM nodes WHERE id = ?
 `
 
 func (q *Queries) GetNode(ctx context.Context, id int64) (Node, error) {
@@ -65,13 +75,14 @@ func (q *Queries) GetNode(ctx context.Context, id int64) (Node, error) {
 		&i.Host,
 		&i.HostKey,
 		&i.IdentityFile,
+		&i.ConfigFile,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getNodeByHost = `-- name: GetNodeByHost :one
-SELECT id, user, host, host_key, identity_file, created_at FROM nodes WHERE host = ?
+SELECT id, user, host, host_key, identity_file, config_file, created_at FROM nodes WHERE host = ?
 `
 
 func (q *Queries) GetNodeByHost(ctx context.Context, host string) (Node, error) {
@@ -83,13 +94,14 @@ func (q *Queries) GetNodeByHost(ctx context.Context, host string) (Node, error) 
 		&i.Host,
 		&i.HostKey,
 		&i.IdentityFile,
+		&i.ConfigFile,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const listNodes = `-- name: ListNodes :many
-SELECT id, user, host, host_key, identity_file, created_at FROM nodes ORDER BY id
+SELECT id, user, host, host_key, identity_file, config_file, created_at FROM nodes ORDER BY id
 `
 
 func (q *Queries) ListNodes(ctx context.Context) ([]Node, error) {
@@ -107,6 +119,7 @@ func (q *Queries) ListNodes(ctx context.Context) ([]Node, error) {
 			&i.Host,
 			&i.HostKey,
 			&i.IdentityFile,
+			&i.ConfigFile,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -120,6 +133,20 @@ func (q *Queries) ListNodes(ctx context.Context) ([]Node, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateNodeConfigFile = `-- name: UpdateNodeConfigFile :exec
+UPDATE nodes SET config_file = ? WHERE id = ?
+`
+
+type UpdateNodeConfigFileParams struct {
+	ConfigFile string `json:"config_file"`
+	ID         int64  `json:"id"`
+}
+
+func (q *Queries) UpdateNodeConfigFile(ctx context.Context, arg UpdateNodeConfigFileParams) error {
+	_, err := q.db.ExecContext(ctx, updateNodeConfigFile, arg.ConfigFile, arg.ID)
+	return err
 }
 
 const updateNodeHostKey = `-- name: UpdateNodeHostKey :exec

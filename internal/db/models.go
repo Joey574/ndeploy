@@ -24,5 +24,6 @@ type Node struct {
 	Host         string    `json:"host"`
 	HostKey      string    `json:"host_key"`
 	IdentityFile string    `json:"identity_file"`
+	ConfigFile   string    `json:"config_file"`
 	CreatedAt    time.Time `json:"created_at"`
 }
