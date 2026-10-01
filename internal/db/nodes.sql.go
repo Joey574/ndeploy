@@ -176,3 +176,17 @@ func (q *Queries) UpdateNodeIdentityFile(ctx context.Context, arg UpdateNodeIden
 	_, err := q.db.ExecContext(ctx, updateNodeIdentityFile, arg.IdentityFile, arg.ID)
 	return err
 }
+
+const updateNodeUser = `-- name: UpdateNodeUser :exec
+UPDATE nodes SET user = ? WHERE id = ?
+`
+
+type UpdateNodeUserParams struct {
+	User string `json:"user"`
+	ID   int64  `json:"id"`
+}
+
+func (q *Queries) UpdateNodeUser(ctx context.Context, arg UpdateNodeUserParams) error {
+	_, err := q.db.ExecContext(ctx, updateNodeUser, arg.User, arg.ID)
+	return err
+}

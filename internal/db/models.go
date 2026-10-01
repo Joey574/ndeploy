@@ -5,9 +5,17 @@
 package db
 
 import (
+	"database/sql"
 	"encoding/json"
 	"time"
 )
+
+type Cmd struct {
+	ID         int64        `json:"id"`
+	Foreign    interface{}  `json:"foreign"`
+	IsUpgrade  sql.NullBool `json:"is_upgrade"`
+	ExecutedAt time.Time    `json:"executed_at"`
+}
 
 type Log struct {
 	ID        int64           `json:"id"`

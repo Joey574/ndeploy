@@ -33,6 +33,7 @@ func New(a *app.App) app.Window {
 		s.Printf(sink.ERROR, "list nodes: %v\n", err)
 	}
 
+	s.Printf(sink.INFO, "fetched %d nodes\n", len(nodes))
 	data := createTable(nodes)
 
 	list := widget.NewTable(

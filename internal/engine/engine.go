@@ -55,6 +55,28 @@ func (e *Engine) TestConnection(ctx context.Context, n *db.Node, prompt ssh.Pass
 	return conn.Close()
 }
 
+func (e *Engine) UpgradeNode(ctx context.Context, n *db.Node, prompt ssh.PassphrasePrompt) error {
+	client, err := e.newClient(n, prompt)
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+
+	conn, err := client.Dial(ctx)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	session, err := conn.NewSession()
+	if err != nil {
+		return err
+	}
+	defer session.Close()
+
+	return nil
+}
+
 func (e *Engine) newClient(n *db.Node, prompt ssh.PassphrasePrompt) (*ssh.Client, error) {
 	hostKey, err := ssh.ParseHostKey(n.HostKey)
 	if err != nil {
