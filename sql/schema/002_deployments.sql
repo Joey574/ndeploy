@@ -5,6 +5,8 @@ CREATE TABLE deployments (
 
     command TEXT NOT NULL,
 
-    is_upgrade BOOLEAN,
+    is_upgrade BOOLEAN NOT NULL DEFAULT FALSE,
+    is_cancelled BOOLEAN NOT NULL DEFAULT FALSE,
+
     executed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
