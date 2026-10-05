@@ -1,8 +1,18 @@
 { pkgs, ndeploy, ... }:
 
+let
+  home = "/home/controller"
+  configDir = "${home}/nixos"
+in
 {
   imports = [
     ./ssh.nix
+  ];
+
+  nix.nixPath = [ "nixpkgs=${pkgs.path}" ];
+  nix.settings.trusted-users = [
+    "root"
+    "controller"
   ];
 
   services.xserver.enable = true;
@@ -19,8 +29,13 @@
   };
 
   systemd.tmpfiles.rules = [
-    "d /home/controller/.cache 0755 controller users -"
-    "d /home/controller/.config 0755 controller users -"
+    "d ${home}/.cache 0755 controller users -"
+    "d ${home}/.config 0755 controller users -"
+
+    "d ${configDir} 0755 controller users -"
+    "C ${configDir}/controller 0755 controller users - ${./.}"
+    "C ${configDir}/node 0755 controller users - ${../nodet1}"
+    "Z ${configDir} - controller users -"
   ];
 
   services.displayManager.sddm.enable = true;
@@ -50,7 +65,6 @@
 
   environment.systemPackages = with pkgs; [
     mesa
-    ndeploy
-  ];
+  ] ++ lib.optional (ndeploy != null) ndeploy;
   system.stateVersion = "26.05";
 }

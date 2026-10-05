@@ -25,6 +25,10 @@
     "admin"
   ];
 
+  # nixos-rebuild --sudo activates the configuration through sudo as admin,
+  # the test node has no password so wheel has to be passwordless
+  security.sudo.wheelNeedsPassword = false;
+
   users.users.admin = {
     isNormalUser = true;
     extraGroups = [ "wheel" ];

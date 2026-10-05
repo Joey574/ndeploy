@@ -7,6 +7,7 @@ import (
 	"ndeploy/v2/internal/app"
 	"ndeploy/v2/internal/db"
 	"ndeploy/v2/internal/engine"
+	"ndeploy/v2/internal/ui/ids"
 	"ndeploy/v2/internal/ui/prompts"
 	"path/filepath"
 	"strings"

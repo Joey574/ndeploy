@@ -8,6 +8,7 @@ import (
 	"ndeploy/v2/internal/app"
 	"ndeploy/v2/internal/db"
 	"ndeploy/v2/internal/ssh"
+	"ndeploy/v2/internal/ui/identity"
 	"ndeploy/v2/internal/ui/ids"
 	"ndeploy/v2/internal/ui/prompts"
 	"path/filepath"
@@ -62,7 +63,7 @@ func New(a *app.App) app.Window {
 	e.list = widget.NewList(
 		func() int { return len(e.nodes) },
 		func() fyne.CanvasObject { return widget.NewLabel("user@host.example") },
-		func(lii widget.ListItemID, o fyne.CanvasObject) {
+		func(i widget.ListItemID, o fyne.CanvasObject) {
 			o.(*widget.Label).SetText(nodeLabel(e.nodes[i]))
 		},
 	)
@@ -76,7 +77,7 @@ func New(a *app.App) app.Window {
 	e.host = widget.NewEntry()
 	e.host.SetPlaceHolder("remote host ex 192.169.1.10 or 192.168.1.10:2222")
 
-	e.key = identity.NewPicket(w, e.sink)
+	e.key = identity.New(w, e.sink)
 
 	e.config = widget.NewEntry()
 	e.config.SetPlaceHolder("configuration.nix for this node, on this machine")

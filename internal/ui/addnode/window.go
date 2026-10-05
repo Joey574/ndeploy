@@ -8,21 +8,15 @@ import (
 	"ndeploy/v2/internal/app"
 	"ndeploy/v2/internal/db"
 	"ndeploy/v2/internal/ssh"
+	"ndeploy/v2/internal/ui/identity"
 	"ndeploy/v2/internal/ui/ids"
 	"ndeploy/v2/internal/ui/prompts"
 	"strings"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/dialog"
-	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/widget"
 	"github.com/Joey574/sink/v2/pkg/sink"
-)
-
-const (
-	automaticLabel = "Automatic (ssh-agent, then default keys)"
-	browseLabel    = "Browse..."
 )
 
 type AddNode struct {
@@ -34,11 +28,9 @@ type AddNode struct {
 	cancel context.CancelFunc
 
 	user, host *widget.Entry
-	identity   *widget.Select
+	key        *identity.Picker
 	status     *widget.Label
 	submit     *widget.Button
-
-	identities map[string]string
 }
 
 func New(a *app.App) app.Window {
@@ -56,7 +48,6 @@ func New(a *app.App) app.Window {
 			sink.Wrap(a.Sink),
 			sink.SetName("addnode"),
 		),
-		identities: map[string]string{automaticLabel: ""},
 	}
 
 	f.user = widget.NewEntry()
@@ -68,10 +59,9 @@ func New(a *app.App) app.Window {
 		f.onSubmit()
 	}
 
-	f.identity = widget.NewSelect(f.identityOptions(), f.onIdentityChanged)
-	f.identity.SetSelected(automaticLabel)
+	f.key = identity.New(w, f.sink)
 
-	f.status = widget.NewLabel(f.agentSummary())
+	f.status = widget.NewLabel(identity.AgentSummary())
 	f.status.Wrapping = fyne.TextWrapWord
 
 	f.submit = widget.NewButton("Add node", f.onSubmit)
@@ -84,7 +74,7 @@ func New(a *app.App) app.Window {
 		widget.NewForm(
 			widget.NewFormItem("user", f.user),
 			widget.NewFormItem("host", f.host),
-			widget.NewFormItem("ssh key", f.identity),
+			widget.NewFormItem("ssh key", f.key.Select),
 		),
 	))
 
@@ -100,84 +90,10 @@ func (f *AddNode) Close() error {
 	return nil
 }
 
-func (f *AddNode) identityOptions() []string {
-	options := []string{automaticLabel}
-
-	found, err := ssh.DiscoverIdentities()
-	if err != nil {
-		f.sink.Printf(sink.WARN, "scanning ~/.ssh failed: %v\n", err)
-	}
-
-	for _, identity := range found {
-		label := identity.Label()
-		f.identities[label] = identity.Path
-		options = append(options, label)
-	}
-
-	return append(options, browseLabel)
-}
-
-func (f *AddNode) agentSummary() string {
-	keys, err := ssh.AgentIdentities()
-	if err != nil {
-		return fmt.Sprintf("ssh-agent could not be queried: %v", err)
-	}
-
-	if len(keys) == 0 {
-		return "ssh-agent holds no keys, automatic will fall back to the default key files."
-	}
-
-	return fmt.Sprintf("ssh-agent holds %d key(s) that automatic will try first", len(keys))
-}
-
-func (f *AddNode) onIdentityChanged(selected string) {
-	if selected == browseLabel {
-		f.browseIdentity()
-	}
-}
-
-func (f *AddNode) browseIdentity() {
-	picker := dialog.NewFileOpen(func(file fyne.URIReadCloser, err error) {
-		if err != nil || file == nil {
-			if err != nil {
-				dialog.ShowError(err, f.w)
-			}
-
-			f.identity.SetSelected(automaticLabel)
-			return
-		}
-		defer file.Close()
-
-		identity, err := ssh.InspectIdentity(file.URI().Path())
-		if err != nil {
-			dialog.ShowError(err, f.w)
-			f.identity.SetSelected(automaticLabel)
-			return
-		}
-
-		label := identity.Label()
-		if _, known := f.identities[label]; !known {
-			f.identities[label] = identity.Path
-
-			last := len(f.identity.Options) - 1
-			options := append([]string{}, f.identity.Options[:last]...)
-			f.identity.Options = append(options, label, browseLabel)
-		}
-
-		f.identity.SetSelected(label)
-	}, f.w)
-
-	if dir, err := storage.ListerForURI(storage.NewFileURI(ssh.Dir())); err == nil {
-		picker.SetLocation(dir)
-	}
-
-	picker.Show()
-}
-
 func (f *AddNode) onSubmit() {
 	user := strings.TrimSpace(f.user.Text)
 	host := strings.TrimSpace(f.host.Text)
-	identityFile := f.identities[f.identity.Selected]
+	identityFile := f.key.Path()
 
 	if user == "" || host == "" {
 		f.status.SetText("user and host are both required")
@@ -227,7 +143,7 @@ func (f *AddNode) addNode(user, host, identityFile string) {
 	f.setStatus("testing connection to " + host + "...")
 	if err := f.a.Engine.TestConnection(f.ctx, &node, prompts.Passphrase(f.w)); err != nil {
 		if errors.Is(err, ssh.ErrPromptCanceled) {
-			f.setStatus("passphrase prompt cancelled, not not added")
+			f.setStatus("passphrase prompt cancelled, node not added")
 			return
 		}
 
@@ -267,7 +183,7 @@ func (f *AddNode) setStatus(text string) {
 }
 
 func (f *AddNode) setBusy(busy bool) {
-	for _, control := range []fyne.Disableable{f.user, f.host, f.identity, f.submit} {
+	for _, control := range []fyne.Disableable{f.user, f.host, f.key.Select, f.submit} {
 		if busy {
 			control.Disable()
 		} else {
