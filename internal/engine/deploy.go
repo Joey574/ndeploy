@@ -45,7 +45,7 @@ func ParseDeploymentType(s string) (DeploymentType, bool) {
 }
 
 // Reports whether the type changes the running system of the target
-func (d DeploymentType) Activate() bool {
+func (d DeploymentType) Activates() bool {
 	switch d {
 	case Switch, Boot, Test, DryActivate:
 		return true
@@ -83,7 +83,7 @@ func (d *Deployment) Validate() error {
 		return ErrNoHost
 	}
 
-	if d.Rollback && !d.Type.Activate() {
+	if d.Rollback && !d.Type.Activates() {
 		return fmt.Errorf("rollback is only valid with switch, boot, test, or dry-activate, not %s", d.Type)
 	}
 

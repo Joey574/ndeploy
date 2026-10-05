@@ -5,4 +5,5 @@ const (
 	LogViewerID  = "logviewer"
 	AddNodeID    = "addnode"
 	EditNodeID   = "editnode"
+	DeployID     = "deploy"
 )

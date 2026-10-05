@@ -28,6 +28,9 @@ func New(a *app.App) app.Window {
 		widget.NewButton("Edit Node", func() {
 			a.OpenOrFocus(ids.EditNodeID)
 		}),
+		widget.NewButton("Deploy", func() {
+			a.OpenOrFocus(ids.DeployID)
+		}),
 	)
 
 	w.SetContent(list)
