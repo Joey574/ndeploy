@@ -76,6 +76,7 @@ func NewApp(args *cli.Args, options ...func(*App)) (*App, error) {
 			sink.SetName("dbu"),
 		)),
 	)
+	a.Engine.SetRecorder(a.Dbu.Queries())
 
 	for _, o := range options {
 		o(a)

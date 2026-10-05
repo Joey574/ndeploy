@@ -56,7 +56,7 @@ func (d *Dbu) Connect() error {
 		return nil
 	}
 
-	db, err := sql.Open("sqlite", fmt.Sprintf("file:%s?mode=rw", d.path))
+	db, err := sql.Open("sqlite", fmt.Sprintf("file:%s?mode=rw&_pragma=foreign_keys(1)", d.path))
 	if err != nil {
 		return err
 	}

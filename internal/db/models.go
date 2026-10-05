@@ -10,11 +10,19 @@ import (
 	"time"
 )
 
-type Cmd struct {
-	ID         int64        `json:"id"`
-	Foreign    interface{}  `json:"foreign"`
-	IsUpgrade  sql.NullBool `json:"is_upgrade"`
-	ExecutedAt time.Time    `json:"executed_at"`
+type Deployment struct {
+	ID          int64         `json:"id"`
+	TargetNode  int64         `json:"target_node"`
+	BuildNode   sql.NullInt64 `json:"build_node"`
+	Action      string        `json:"action"`
+	ConfigFile  string        `json:"config_file"`
+	Command     string        `json:"command"`
+	IsUpgrade   bool          `json:"is_upgrade"`
+	IsRollback  bool          `json:"is_rollback"`
+	IsCancelled bool          `json:"is_cancelled"`
+	ExitCode    int64         `json:"exit_code"`
+	Error       string        `json:"error"`
+	ExecutedAt  time.Time     `json:"executed_at"`
 }
 
 type Log struct {

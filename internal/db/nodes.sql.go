@@ -135,6 +135,33 @@ func (q *Queries) ListNodes(ctx context.Context) ([]Node, error) {
 	return items, nil
 }
 
+const updateNode = `-- name: UpdateNode :exec
+UPDATE nodes
+SET user = ?, host = ?, host_key = ?, identity_file = ?, config_file = ?
+WHERE id = ?
+`
+
+type UpdateNodeParams struct {
+	User         string `json:"user"`
+	Host         string `json:"host"`
+	HostKey      string `json:"host_key"`
+	IdentityFile string `json:"identity_file"`
+	ConfigFile   string `json:"config_file"`
+	ID           int64  `json:"id"`
+}
+
+func (q *Queries) UpdateNode(ctx context.Context, arg UpdateNodeParams) error {
+	_, err := q.db.ExecContext(ctx, updateNode,
+		arg.User,
+		arg.Host,
+		arg.HostKey,
+		arg.IdentityFile,
+		arg.ConfigFile,
+		arg.ID,
+	)
+	return err
+}
+
 const updateNodeConfigFile = `-- name: UpdateNodeConfigFile :exec
 UPDATE nodes SET config_file = ? WHERE id = ?
 `
@@ -146,6 +173,20 @@ type UpdateNodeConfigFileParams struct {
 
 func (q *Queries) UpdateNodeConfigFile(ctx context.Context, arg UpdateNodeConfigFileParams) error {
 	_, err := q.db.ExecContext(ctx, updateNodeConfigFile, arg.ConfigFile, arg.ID)
+	return err
+}
+
+const updateNodeHost = `-- name: UpdateNodeHost :exec
+UPDATE nodes SET host = ? WHERE id = ?
+`
+
+type UpdateNodeHostParams struct {
+	Host string `json:"host"`
+	ID   int64  `json:"id"`
+}
+
+func (q *Queries) UpdateNodeHost(ctx context.Context, arg UpdateNodeHostParams) error {
+	_, err := q.db.ExecContext(ctx, updateNodeHost, arg.Host, arg.ID)
 	return err
 }
 

@@ -29,3 +29,11 @@ UPDATE nodes SET identity_file = ? WHERE id = ?;
 
 -- name: UpdateNodeConfigFile :exec
 UPDATE nodes SET config_file = ? WHERE id = ?;
+
+-- name: UpdateNodeHost :exec
+UPDATE nodes SET host = ? WHERE id = ?;
+
+-- name: UpdateNode :exec
+UPDATE nodes
+SET user = ?, host = ?, host_key = ?, identity_file = ?, config_file = ?
+WHERE id = ?;
