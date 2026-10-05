@@ -121,7 +121,7 @@ func (e *Engine) StartDeployment(ctx context.Context, d *Deployment) (*Run, erro
 		exitCode:   -1,
 	}
 
-	run.ID = e.record(ctx, run)
+	run.ID, err = e.record(ctx, run)
 	if err != nil {
 		cancel()
 		pw.Close()
@@ -135,7 +135,7 @@ func (e *Engine) StartDeployment(ctx context.Context, d *Deployment) (*Run, erro
 	)
 
 	s.Printf(sink.INFO, "deploying to %s@%s: %s\n", d.Target.User, d.Target.Host, run.Command)
-	s.Printf(sink.DEBUG, "ssh config at %s\n", &sshConfig)
+	s.Printf(sink.DEBUG, "ssh config at %s\n", sshConfig)
 
 	if err := cmd.Start(); err != nil {
 		cancel()
@@ -168,7 +168,7 @@ func (e *Engine) pump(run *Run, s sink.Sink, r io.Reader, done chan<- struct{}) 
 		s.WriteString(sink.INFO, line)
 
 		if run.Deployment.Output != nil {
-			if _, err := io.WriteString(&run.Deployment.Output, line); err != nil {
+			if _, err := io.WriteString(run.Deployment.Output, line); err != nil {
 				s.Printf(sink.WARN, "writing deployment output: %v\n", err)
 				run.Deployment.Output = nil
 			}
@@ -268,9 +268,9 @@ func (e *Engine) record(ctx context.Context, run *Run) (int64, error) {
 		TargetNode: d.Target.ID,
 		Action:     d.Type.String(),
 		ConfigFile: d.Config,
-		Command: run.Command,
-		IsUpgrade: d.Upgrade,
-		IsRollback: d.Rollback
+		Command:    run.Command,
+		IsUpgrade:  d.Upgrade,
+		IsRollback: d.Rollback,
 	}
 
 	if d.Builder != nil {
@@ -303,8 +303,8 @@ func (e *Engine) finishRecord(run *Run, runErr error) {
 
 	err := e.q.FinishDeployment(ctx, db.FinishDeploymentParams{
 		ExitCode: int64(run.ExitCode()),
-		Error: msg,
-		ID: run.ID
+		Error:    msg,
+		ID:       run.ID,
 	})
 	if err != nil {
 		e.sink.Printf(sink.ERROR, "finishing deployment %d: %v\n", run.ID, err)

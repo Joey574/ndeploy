@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"ndeploy/v2/internal/db"
 	"os/exec"
 	"strings"
@@ -128,7 +129,7 @@ func (d *Deployment) CommandContext(ctx context.Context) *exec.Cmd {
 
 func (d *Deployment) nodes() []*db.Node {
 	nodes := []*db.Node{d.Target}
-	if d.Builder != nil && d.Builder.ID !+ d.Target.ID {
+	if d.Builder != nil && d.Builder.ID != d.Target.ID {
 		nodes = append(nodes, d.Builder)
 	}
 
