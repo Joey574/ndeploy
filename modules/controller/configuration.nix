@@ -1,8 +1,8 @@
 { pkgs, ndeploy, ... }:
 
 let
-  home = "/home/controller"
-  configDir = "${home}/nixos"
+  home = "/home/controller";
+  configDir = "${home}/nixos";
 in
 {
   imports = [
